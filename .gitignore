@@ -1,0 +1,28 @@
+# Secrets and machine-specific state must never be committed.
+*.key
+*.pem
+*.p12
+*.pfx
+*.kdbx
+*.age
+.env
+.env.*
+secrets/
+private/
+
+# Local tools and editor state.
+.DS_Store
+*.swp
+*.swo
+**/.git/
+**/cache/
+**/Cache/
+**/logs/
+**/log/
+**/workspaceStorage/
+**/History/
+
+# Shell history and generated completion files.
+.bash_history
+.zsh_history
+.zcompdump*

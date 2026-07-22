@@ -1,0 +1,36 @@
+# ==============================================================================
+# REDDIT-APPROVED MINIMAL ALACRITTY CONFIGURATION (.toml format)
+# ==============================================================================
+[general]
+import = [
+    "~/.config/alacritty/themes/themes/rose_pine.toml"
+]
+
+[window]
+# Minimal padding to keep text clear of screen edges
+padding = { x = 12, y = 12 }
+
+# Slight transparency (0.85 to 0.95 is the Reddit sweet spot)
+opacity = 0.90
+
+# Default startup mode
+startup_mode = "Windowed"
+
+decorations = "None"
+
+[window.dimensions]
+columns = 80  
+lines = 30  
+
+[font]
+# Nerd Fonts are highly recommended by Reddit for icon support
+normal = { family = "JetBrainsMono", style = "Regular" }
+bold = { family = "JetBrainsMono", style = "Bold" }
+italic = { family = "JetBrainsMono", style = "Italic" }
+size = 12.0
+
+[cursor]
+# Clean, non-blinking block cursor for a retro-minimal feel
+style = { shape = "Beam", blinking = "Never" }
+
+
