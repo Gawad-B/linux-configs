@@ -9,6 +9,7 @@ Personal Linux configuration, organized as [GNU Stow](https://www.gnu.org/softwa
 - `alacritty`, `kitty`, `fastfetch`, `starship`, `tmux` — terminal tooling
 - `nvim`, `vscode`, `zed` — editor configuration
 - `notchnux` — NotchNux settings
+- `gtk-theme` — the user-installed Rosepine Dark GTK theme
 
 Only portable, intentional configuration is tracked. Browser profiles, SSH/GPG keys, passwords, tokens, shell history, caches, generated state, editor workspaces, and vendored plugin/theme repositories are deliberately excluded.
 
@@ -27,6 +28,8 @@ stow -t "$HOME" nvim
 ```
 
 After installing the tmux package, install its plugins from inside tmux with `prefix` then `I` (the prefix is `Ctrl-a`), or clone TPM to `~/.tmux/plugins/tpm` first.
+
+The GTK theme is linked to `~/.themes/Rosepine-Dark`. Your current GNOME selection is the system-provided `Adwaita` theme with a dark preference; select `Rosepine-Dark` in your desktop's appearance settings whenever you want to use the included theme.
 
 ## Adding a config later
 
