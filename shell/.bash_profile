@@ -10,3 +10,4 @@ fi
 
 # Added by Antigravity CLI installer
 export PATH="/home/gawad-b/.local/bin:$PATH"
+. "$HOME/.cargo/env"

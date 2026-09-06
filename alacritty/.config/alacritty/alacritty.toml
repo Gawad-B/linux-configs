@@ -1,11 +1,6 @@
 # ==============================================================================
 # REDDIT-APPROVED MINIMAL ALACRITTY CONFIGURATION (.toml format)
 # ==============================================================================
-[general]
-import = [
-    "~/.config/alacritty/themes/themes/rose_pine.toml"
-]
-
 [window]
 # Minimal padding to keep text clear of screen edges
 padding = { x = 12, y = 12 }
@@ -16,7 +11,7 @@ opacity = 0.90
 # Default startup mode
 startup_mode = "Windowed"
 
-decorations = "None"
+#decorations = "None"
 
 [window.dimensions]
 columns = 80  
@@ -34,3 +29,8 @@ size = 12.0
 style = { shape = "Beam", blinking = "Never" }
 
 
+
+[[keyboard.bindings]]
+key = "Return"
+mods = "Shift"
+chars = "\u001B\r"

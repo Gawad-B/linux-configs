@@ -105,6 +105,7 @@ source $ZSH/oh-my-zsh.sh
 alias n="nvim"
 alias tm="tmux"
 alias f="fastfetch"
+alias c="claude"
 
 
 # Added by Antigravity CLI installer
