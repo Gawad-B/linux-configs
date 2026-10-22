@@ -20,5 +20,6 @@ done
 printf '%s\n' 'Dotfiles linked successfully.'
 printf '%s\n' ''
 printf '%s\n' 'Themes are installed separately (they live outside the stow tree):'
-printf '%s\n' '  ./icons/install.sh          # MacTahoe icon theme, fetched from upstream'
+printf '%s\n' '  ./icons/install.sh            # MacTahoe icon theme, fetched from upstream'
 printf '%s\n' '  sudo ./grub-theme/install.sh  # Elegant Mojave GRUB theme'
+printf '%s\n' '  ./gnome/install-extensions.sh # GNOME Shell extensions'

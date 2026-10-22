@@ -1,0 +1,12 @@
+appindicatorsupport@rgcjonas.gmail.com
+apps-menu@gnome-shell-extensions.gcampax.github.com
+blur-my-shell@aunetx
+caffeine@patapon.info
+clipboard-indicator@tudmotu.com
+compiz-alike-magic-lamp-effect@hermes83.github.com
+dash-to-dock@micxgx.gmail.com
+desk-widgets@gawad-b.github.io
+just-perfection-desktop@just-perfection
+prayer-times@gawad-b.github.io
+search-light@icedman.github.com
+Vitals@CoreCoding.com

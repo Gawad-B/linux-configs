@@ -22,6 +22,10 @@ These live outside `$HOME` or are too large to vendor, so they have their own sc
 - `grub-theme/install.sh` — **Elegant Mojave (window-left-dark)** GRUB theme.
   Vendored in `grub-theme/`, copied to `/boot/grub2/themes` and wired into
   `/etc/default/grub`. Needs root.
+- `gnome/` — the GNOME Shell extensions I use. See
+  [`gnome/EXTENSIONS.md`](gnome/EXTENSIONS.md) for the annotated list;
+  `gnome/install-extensions.sh` reinstalls them and
+  `gnome/extension-settings.dconf` restores their settings.
 - `wallpapers/` — desktop backgrounds, set manually.
 
 Only portable, intentional configuration is tracked. Browser profiles, SSH/GPG keys, passwords, tokens, shell history, caches, generated state, editor workspaces, and vendored plugin/theme repositories are deliberately excluded.
@@ -45,6 +49,7 @@ Then install the themes:
 ```sh
 ./icons/install.sh
 sudo ./grub-theme/install.sh
+./gnome/install-extensions.sh
 ```
 
 After installing the tmux package, install its plugins from inside tmux with `prefix` then `I` (the prefix is `Ctrl-a`), or clone TPM to `~/.tmux/plugins/tpm` first.

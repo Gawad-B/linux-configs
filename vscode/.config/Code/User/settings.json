@@ -180,5 +180,6 @@
   "extensions.ignoreRecommendations": true,
   "chat.disableAIFeatures": true,
   "workbench.sideBar.location": "right",
-  "workbench.activityBar.location": "bottom"
+  "workbench.activityBar.location": "bottom",
+  "workbench.colorTheme": "Light+"
 }
