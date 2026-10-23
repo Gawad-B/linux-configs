@@ -38,6 +38,8 @@ These ship with Fedora and are not enabled:
 
 ## Restoring on a new machine
 
+`./bootstrap.sh` does all of this as its `gnome` step. To run just this part:
+
 ```sh
 ./gnome/install-extensions.sh
 ```

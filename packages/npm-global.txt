@@ -1,0 +1,5 @@
+# Global npm packages (editor tooling), installed by bootstrap.sh.
+prettier
+pyright
+typescript
+typescript-language-server

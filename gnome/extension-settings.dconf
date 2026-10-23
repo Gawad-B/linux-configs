@@ -49,10 +49,10 @@ pipeline='pipeline_default'
 pipeline='pipeline_migrated_dynamic_blur'
 
 [caffeine]
-cli-toggle=false
+cli-toggle=true
 duration-timer=2
 duration-timer-list=[900, 1800, 3600]
-indicator-position-max=1
+indicator-position-max=3
 screen-blank='always'
 user-enabled=true
 
@@ -95,7 +95,7 @@ workspace-peek=false
 workspace-switcher-should-show=true
 
 [live-lockscreen]
-background-video-path=''
+# background-video-path stripped (public repo) -- set in the extension's prefs
 background-video-scaling-mode=1
 prompt-change-blur=true
 

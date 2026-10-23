@@ -1,0 +1,2 @@
+# pipx applications, installed by bootstrap.sh.
+gcalcli

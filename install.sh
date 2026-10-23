@@ -13,11 +13,18 @@ fi
 
 cd "$repo_dir"
 
+# --no-folding: link files, never whole directories. Otherwise, on a fresh
+# machine where ~/.config/Code or ~/.config/tmux does not exist yet, stow links
+# the directory itself into this repo, and every cache, plugin and log the app
+# writes there ends up inside the git tree.
 for package in $packages; do
-  stow --target="$HOME" --restow "$package"
+  stow --no-folding --target="$HOME" --restow "$package"
 done
 
 printf '%s\n' 'Dotfiles linked successfully.'
+
+# bootstrap.sh installs the themes itself.
+[ -z "${BOOTSTRAP:-}" ] || exit 0
 printf '%s\n' ''
 printf '%s\n' 'Themes are installed separately (they live outside the stow tree):'
 printf '%s\n' '  ./icons/install.sh            # MacTahoe icon theme, fetched from upstream'

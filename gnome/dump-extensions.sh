@@ -24,7 +24,7 @@ gsettings get org.gnome.shell enabled-extensions \
 dconf dump /org/gnome/shell/extensions/ \
   | sed -E "s|^latitude=.*|# latitude stripped (public repo) -- set via Prayer Times prefs|" \
   | sed -E "s|^longitude=.*|# longitude stripped (public repo) -- set via Prayer Times prefs|" \
-  | sed -E "s|^background-video-path=.*|background-video-path=''|" \
+  | sed -E "s|^background-video-path=.*|# background-video-path stripped (public repo) -- set in the extension's prefs|" \
   > "$here/extension-settings.dconf"
 
 printf 'Wrote:\n'

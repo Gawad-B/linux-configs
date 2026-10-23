@@ -1,87 +1,130 @@
 # Linux dotfiles
 
-Personal Linux configuration (Fedora 44, GNOME), organized as [GNU Stow](https://www.gnu.org/software/stow/) packages. Each top-level directory mirrors the files' destination below `$HOME`; for example, `nvim/.config/nvim/init.lua` is linked to `~/.config/nvim/init.lua`.
+My whole Fedora 44 + GNOME setup: configs, apps, fonts, icons, GRUB theme,
+wallpaper, GNOME extensions and desktop settings — reproducible on any machine
+with one command.
 
-## Included
+## New machine: one command
+
+On a fresh Fedora install, logged in to the GNOME desktop:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Gawad-B/linux-configs/main/bootstrap.sh | bash
+```
+
+That clones this repo to `~/Coding/linux-configs` and sets everything up. It
+asks for your sudo password **once**, at the start, then runs unattended.
+When it finishes, log out and back in.
+
+Already have a clone? Run it from there instead:
+
+```sh
+./bootstrap.sh                 # everything
+./bootstrap.sh gnome dotfiles  # only some steps
+./bootstrap.sh --list          # what each step does
+```
+
+| Step | What it does |
+| --- | --- |
+| `repos` | RPM Fusion, Helium COPR, Shinux, and the Brave / VS Code / Claude Desktop / ChatGPT repos |
+| `packages` | everything in [`packages/dnf.txt`](packages/dnf.txt), plus RPM Fusion's full ffmpeg |
+| `flatpaks` | [`packages/flatpak.txt`](packages/flatpak.txt) from Flathub |
+| `dotfiles` | backs up any file in the way, then stows every config package |
+| `tools` | Starship, Zed, Claude Code, vex, Oh My Zsh + plugins, tmux plugins, npm and pipx tools |
+| `shell` | makes zsh the login shell |
+| `themes` | MacTahoe icons and cursors, wallpapers, font cache |
+| `grub` | the Elegant Mojave GRUB theme |
+| `gnome` | extensions (incl. my own Prayer Times and Desk Widgets, built from source), their settings, keybindings, touchpad, dock favourites, wallpaper |
+| `services` | enables docker (and adds you to its group) and postgresql |
+| `neovim` | installs the plugins pinned in `lazy-lock.json` |
+
+Every step checks before acting, so **re-running is safe** — it only does what
+is missing. A step that fails is reported in the summary without stopping the
+rest; fix the cause and re-run just that step. Everything is logged to
+`~/linux-configs-bootstrap-<timestamp>.log`, and any file the dotfiles step
+replaces is moved to `~/dotfiles-backup-<timestamp>/`, never deleted.
+
+**Not automated**, listed at the end of every run:
+
+- signing in: `tailscale up`, `gh auth login`, `claude`
+- `codex`, `agy`, `hermes`, `rtk`, `cua-driver` — no installer I can rely on
+- GPU drivers — they depend on each laptop's hardware
+
+## Keeping several machines in sync
+
+The configs are **symlinks into this repo**, so editing `~/.zshrc` or
+`~/.config/kitty/kitty.conf` edits the repo directly. GNOME settings live in
+dconf rather than files, so capture those explicitly:
+
+```sh
+./gnome/dump-desktop.sh      # keybindings, touchpad, theme, dock favourites
+./gnome/dump-extensions.sh   # extension list and settings
+git add -A && git commit -m 'update configs' && git push
+```
+
+On the other machine:
+
+```sh
+./bootstrap.sh
+```
+
+It pulls the latest commit first — unless the clone there has uncommitted
+changes, in which case it warns and uses the files as they are.
+
+> Re-running applies the repo's GNOME settings over the machine's. Capture any
+> tweaks you want to keep **before** you re-run.
+
+## Layout
 
 ### Stow packages (linked into `$HOME`)
+
+Each directory mirrors its destination below `$HOME`; for example,
+`nvim/.config/nvim/init.lua` is linked to `~/.config/nvim/init.lua`.
 
 - `shell` — Bash and Zsh startup configuration (Oh My Zsh + Starship)
 - `git` — Git identity and preferences
 - `alacritty`, `kitty`, `fastfetch`, `starship`, `tmux`, `btop` — terminal tooling
 - `nvim`, `vscode`, `zed` — editor configuration
-- `gtk-theme` — the Rosepine Dark GTK theme
+- `gtk-theme` — the Rosepine Dark GTK theme (installed, not active)
 
-### Installed separately
+Files are linked individually (`stow --no-folding`), never whole directories,
+so apps can't write their caches into this repo.
 
-These live outside `$HOME` or are too large to vendor, so they have their own scripts:
+### Everything else
 
-- `icons/install.sh` — **MacTahoe** icon theme (the active one), fetched from
-  [vinceliuice/MacTahoe-icon-theme](https://github.com/vinceliuice/MacTahoe-icon-theme).
-  Not vendored: the theme is ~215 MB across 44k files.
-- `grub-theme/install.sh` — **Elegant Mojave (window-left-dark)** GRUB theme.
-  Vendored in `grub-theme/`, copied to `/boot/grub2/themes` and wired into
-  `/etc/default/grub`. Needs root.
-- `gnome/` — the GNOME Shell extensions I use. See
-  [`gnome/EXTENSIONS.md`](gnome/EXTENSIONS.md) for the annotated list;
-  `gnome/install-extensions.sh` reinstalls them and
-  `gnome/extension-settings.dconf` restores their settings.
-- `wallpapers/` — desktop backgrounds, set manually.
+- `packages/` — dnf, Flatpak, npm and pipx package lists, plus the third-party
+  `.repo` files and the ChatGPT repo's public signing key.
+- `icons/install.sh` — **MacTahoe** icons and cursors, fetched from
+  [vinceliuice/MacTahoe-icon-theme](https://github.com/vinceliuice/MacTahoe-icon-theme)
+  (not vendored: ~215 MB).
+- `grub-theme/` — **Elegant Mojave (window-left-dark)**, vendored, with an
+  installer that wires it into `/etc/default/grub`.
+- `gnome/` — see [`gnome/EXTENSIONS.md`](gnome/EXTENSIONS.md) for the
+  extension list. `desktop-settings.dconf` and `extension-settings.dconf` hold
+  the settings; the `dump-*.sh` scripts re-capture them.
+- `wallpapers/` — all copied to `~/.local/share/backgrounds`; the active one is
+  set by the `wallpaper` variable at the top of `bootstrap.sh`.
 
-Only portable, intentional configuration is tracked. Browser profiles, SSH/GPG keys, passwords, tokens, shell history, caches, generated state, editor workspaces, and vendored plugin/theme repositories are deliberately excluded.
+## Current look
 
-## Install on a new machine
+- Icons and cursor: `MacTahoe-dark`
+- GTK: system `Adwaita`, dark preference
+- Fonts: JetBrains Mono in the terminals
+- Buttons on the left: close, minimize, maximize
 
-Install GNU Stow with your distribution package manager, clone this repository anywhere, then run:
+## Privacy
 
-```sh
-./install.sh
-```
-
-The script uses `stow` to create symlinks in your home directory. It will stop on a conflict rather than overwrite an existing file. Review or back up conflicting files, then re-run it. To install only one package:
-
-```sh
-stow -t "$HOME" nvim
-```
-
-Then install the themes:
-
-```sh
-./icons/install.sh
-sudo ./grub-theme/install.sh
-./gnome/install-extensions.sh
-```
-
-After installing the tmux package, install its plugins from inside tmux with `prefix` then `I` (the prefix is `Ctrl-a`), or clone TPM to `~/.tmux/plugins/tpm` first.
-
-## Current appearance settings
-
-```sh
-gsettings set org.gnome.desktop.interface icon-theme MacTahoe
-gsettings set org.gnome.desktop.interface gtk-theme Adwaita
-```
-
-The GTK theme in use is the system-provided `Adwaita` with a dark preference. `Rosepine-Dark` is included and linked to `~/.themes/Rosepine-Dark`; select it in your desktop's appearance settings if you want it.
-
-## Keeping this repo in sync
-
-Because the packages are stowed, `~/.bashrc` and friends are **symlinks into this
-repository**. Editing them in place edits the repo, so changes show up in
-`git status` directly:
-
-```sh
-git status
-git diff
-git commit -am 'update configs'
-git push
-```
-
-If `git status` is empty after you have changed a config, the file is probably a
-real file rather than a symlink — re-run `./install.sh` for that package.
+This repo is public. Only portable, intentional configuration is tracked —
+never SSH/GPG keys, tokens, shell history, caches or browser profiles. The dump
+scripts strip personal data before writing: the Prayer Times coordinates, the
+Desk Widgets video path, and GNOME's night-light location. On a new machine,
+Prayer Times is set to find your location automatically.
 
 ## Adding a config later
 
-1. Put the file under the appropriate package using its path relative to `$HOME`.
+1. Put the file under the right package, at its path relative to `$HOME`.
 2. Keep secrets in a separate encrypted store, never in this repository.
-3. Run `stow -t "$HOME" --restow <package>` to link it.
-4. Run `git status`, review the diff, and commit.
+3. `stow --no-folding -t "$HOME" --restow <package>` to link it.
+4. `git status`, review the diff, commit.
+
+New package to install everywhere? Add it to the matching list in `packages/`.

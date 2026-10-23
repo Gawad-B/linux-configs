@@ -1,0 +1,94 @@
+# Fedora packages installed by bootstrap.sh, one per line. `#` starts a comment.
+#
+# Derived from `dnf history` on the main laptop (Fedora 44). Packages that
+# Fedora Workstation ships by default are left out. Third-party repositories
+# are enabled by bootstrap.sh before this list is installed.
+
+# --- shell and terminal
+zsh
+kitty
+alacritty
+tmux
+stow
+git
+gh
+fzf
+eza
+btop
+fastfetch
+ripgrep
+wl-clipboard
+jetbrains-mono-fonts-all
+age
+openssl
+cmatrix
+asciiquarium
+
+# --- editors
+neovim
+code
+# vex comes from its GitHub release; Zed from zed.dev (see bootstrap.sh)
+
+# --- GNOME
+gnome-tweaks
+gnome-extensions-app
+gtk-murrine-engine
+sassc
+
+# --- apps (third-party repos)
+brave-browser
+helium-bin
+chromium
+claude-desktop-unofficial
+chatgpt
+whatsapp
+mpv
+
+# --- multimedia (RPM Fusion; ffmpeg itself is swapped in by bootstrap.sh)
+libavcodec-freeworld
+libheif-freeworld
+gstreamer1-plugin-libav
+frei0r-plugins
+
+# --- build tools and GNOME extension development
+gcc
+gcc-c++
+make
+nodejs
+npm
+gjs
+glib2-devel
+gtk4-devel
+libadwaita-devel
+mutter-devkit
+geoclue2
+gstreamer1-plugins-base
+gstreamer1-plugins-good
+
+# --- languages
+java-latest-openjdk
+java-25-openjdk
+pipx
+ruff
+python3-biopython
+python3-scikit-learn
+python3-pandas
+python3-joblib
+python3-fastapi
+python3-uvicorn
+python3-dotenv
+python3-psycopg2
+
+# --- databases
+postgresql
+postgresql-server
+pgvector
+
+# --- containers
+podman
+distrobox
+moby-engine
+docker-compose
+
+# --- networking
+tailscale

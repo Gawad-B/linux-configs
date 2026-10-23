@@ -1,0 +1,5 @@
+# Flatpaks from Flathub, installed by bootstrap.sh. One app ID per line.
+com.mattjakeman.ExtensionManager
+dev.vencord.Vesktop
+org.localsend.localsend_app
+org.qbittorrent.qBittorrent
