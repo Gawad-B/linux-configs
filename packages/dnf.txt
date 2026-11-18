@@ -1,6 +1,7 @@
 # Fedora packages installed by bootstrap.sh, one per line. `#` starts a comment.
 #
-# Derived from `dnf history` on the main laptop (Fedora 44). Packages that
+# Derived from `dnf history` on the main laptop (Fedora 44, kept up to date
+# through the move to 45). Packages that
 # Fedora Workstation ships by default are left out. Third-party repositories
 # are enabled by bootstrap.sh before this list is installed.
 
@@ -27,7 +28,7 @@ asciiquarium
 # --- editors
 neovim
 code
-# vex comes from its GitHub release; Zed from zed.dev (see bootstrap.sh)
+# dacode comes from its GitHub release (bootstrap.sh); Zed is a Flatpak
 
 # --- GNOME
 gnome-tweaks
@@ -41,12 +42,13 @@ helium-bin
 chromium
 claude-desktop-unofficial
 chatgpt
-whatsapp
+proton-vpn-gnome-desktop
+steam-devices
 mpv
+# WhatsApp is my own build (whatsapp-for-fedora), installed by bootstrap.sh
 
 # --- multimedia (RPM Fusion; ffmpeg itself is swapped in by bootstrap.sh)
 libavcodec-freeworld
-libheif-freeworld
 gstreamer1-plugin-libav
 frei0r-plugins
 
@@ -62,6 +64,8 @@ gtk4-devel
 libadwaita-devel
 mutter-devkit
 geoclue2
+webkitgtk6.0-devel
+python3-pillow
 gstreamer1-plugins-base
 gstreamer1-plugins-good
 

@@ -3,9 +3,12 @@
 # Install the GNOME Shell extensions listed in extensions.txt and mark them
 # enabled. Safe to re-run: anything already installed is left alone.
 #
-# Extensions from extensions.gnome.org are fetched for the running shell
-# version. The two I wrote myself are not on e.g.o, so they are built from
-# source (needs git, npm and make, which bootstrap.sh installs first).
+# Three sources:
+#   - extensions.gnome.org, fetched for the running shell version
+#   - my own published extensions, cloned into ~/Coding and installed with
+#     their own `make install` (needs git, npm and make; bootstrap.sh installs
+#     them first)
+#   - small local-only extensions kept in local-extensions/, copied as-is
 #
 # Newly installed extensions only load after logging out and back in; the
 # enabled list is written to gsettings so they come up on next login.
@@ -15,7 +18,9 @@ set -eu
 here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 shell_ver=$(gnome-shell --version | awk '{print $3}')
 user_ext="$HOME/.local/share/gnome-shell/extensions"
-src_cache="${XDG_CACHE_HOME:-$HOME/.cache}/linux-configs/src"
+# Cloned where I keep code rather than into a cache: a checkout installed with
+# `make link` keeps pointing at it.
+src_dir="$HOME/Coding"
 failed=0
 
 printf 'GNOME Shell %s\n\n' "$shell_ver"
@@ -24,6 +29,7 @@ mine_repo() {
   case "$1" in
     prayer-times@gawad-b.github.io) echo 'https://github.com/Gawad-B/Prayer_TImes.git' ;;
     desk-widgets@gawad-b.github.io) echo 'https://github.com/Gawad-B/Gnome-Widgets.git' ;;
+    dynland@gawad-b.github.io)      echo 'https://github.com/Gawad-B/Dynland.git' ;;
   esac
 }
 
@@ -48,17 +54,20 @@ install_from_ego() {
 
 install_from_source() {
   repo=$1
-  dir="$src_cache/$(basename "$repo" .git)"
+  dir="$src_dir/$(basename "$repo" .git)"
 
-  if [ -d "$dir/.git" ]; then
-    git -C "$dir" pull -q --ff-only
-  else
-    mkdir -p "$src_cache"
-    git clone -q --depth 1 "$repo" "$dir"
+  if [ ! -d "$dir/.git" ]; then
+    mkdir -p "$src_dir"
+    git clone -q "$repo" "$dir"
   fi
 
-  (cd "$dir" && npm ci --silent --no-audit --no-fund && make install >/dev/null)
-  printf '  built and installed from %s\n' "$repo"
+  # Each repo's own Makefile knows how to build and install it.
+  (
+    cd "$dir"
+    if [ -f package-lock.json ]; then npm ci --silent --no-audit --no-fund; fi
+    make install >/dev/null
+  )
+  printf '  built and installed from %s\n' "$dir"
 }
 
 while read -r uuid; do
@@ -69,6 +78,10 @@ while read -r uuid; do
     printf '  ships with the system\n'
   elif [ -d "$user_ext/$uuid" ]; then
     printf '  already installed\n'
+  elif [ -d "$here/local-extensions/$uuid" ]; then
+    mkdir -p "$user_ext"
+    cp -r "$here/local-extensions/$uuid" "$user_ext/"
+    printf '  copied from local-extensions/\n'
   elif repo=$(mine_repo "$uuid") && [ -n "$repo" ]; then
     install_from_source "$repo" || { printf '  !! build failed\n'; failed=$((failed + 1)); }
   else

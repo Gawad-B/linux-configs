@@ -179,7 +179,6 @@
   "liveServer.settings.donotShowInfoMsg": true,
   "extensions.ignoreRecommendations": true,
   "chat.disableAIFeatures": true,
-  "workbench.sideBar.location": "right",
-  "workbench.activityBar.location": "bottom",
-  "workbench.colorTheme": "Light+"
+  "window.density.layout": "compact",
+  "workbench.colorTheme": "Dark Modern"
 }

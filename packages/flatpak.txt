@@ -1,5 +1,10 @@
 # Flatpaks from Flathub, installed by bootstrap.sh. One app ID per line.
+app.zen_browser.zen
+io.gitlab.librewolf-community
 com.mattjakeman.ExtensionManager
+com.obsproject.Studio
+com.valvesoftware.Steam
 dev.vencord.Vesktop
+dev.zed.Zed
 org.localsend.localsend_app
 org.qbittorrent.qBittorrent

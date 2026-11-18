@@ -8,8 +8,10 @@ color-scheme='prefer-dark'
 cursor-theme='MacTahoe-dark'
 enable-animations=true
 enable-hot-corners=true
-icon-theme='MacTahoe-dark'
+icon-theme='Nothing-Dots'
 show-battery-percentage=true
+text-scaling-factor=1.0
+toolkit-accessibility=false
 
 [desktop/wm/preferences]
 button-layout='close,minimize,maximize:appmenu'
@@ -21,8 +23,8 @@ move-to-workspace-2=['<Shift><Super>2']
 move-to-workspace-3=['<Shift><Super>3']
 move-to-workspace-4=['<Shift><Super>4']
 move-to-workspace-down=['<Control><Shift><Alt>Down']
-move-to-workspace-left=['<Super><Shift>KP_Prior', '<Super><Shift><Alt>Left', '<Control><Shift><Alt>Left', '<Super><Shift>Page_Up']
-move-to-workspace-right=['<Super><Shift>KP_Next', '<Super><Shift><Alt>Right', '<Control><Shift><Alt>Right', '<Super><Shift>Page_Down']
+move-to-workspace-left=['<Shift><Super>a']
+move-to-workspace-right=['<Shift><Super>d']
 move-to-workspace-up=['<Control><Shift><Alt>Up']
 switch-to-workspace-1=['<Super>1']
 switch-to-workspace-2=['<Super>2']
@@ -61,7 +63,7 @@ name='Kitty'
 toggle-application-view=@as []
 
 [shell]
-favorite-apps=['org.gnome.Nautilus.desktop', 'helium.desktop', 'com.microsoft.VSCode.desktop', 'chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Default.desktop', 'claude-desktop-unofficial.desktop', 'chatgpt.desktop', 'org.gnome.TextEditor.desktop', 'chrome-agimnkijcaahngcdmfeangaknmldooml-Default.desktop', 'io.github.shehawey.whatsapp.desktop', 'chrome-aghbiahbpaijignceidepookljebhfak-Default.desktop', 'org.localsend.localsend_app.desktop', 'dev.vencord.Vesktop.desktop', 'chrome-cadlkienfkclaiaibeoongdcgmdikeeg-Default.desktop', 'hermes.desktop']
+favorite-apps=['org.gnome.Nautilus.desktop', 'helium.desktop', 'app.zen_browser.zen.desktop', 'dacode.desktop', 'claude-desktop-unofficial.desktop', 'chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Default.desktop', 'chatgpt.desktop', 'org.gnome.TextEditor.desktop', 'chrome-agimnkijcaahngcdmfeangaknmldooml-Default.desktop', 'io.github.shehawey.whatsapp.desktop', 'chrome-aghbiahbpaijignceidepookljebhfak-Default.desktop', 'dev.vencord.Vesktop.desktop', 'chrome-lodlkdfmihgonocnmddehnfgiljnadcf-Default.desktop', 'com.microsoft.VSCode.desktop', 'chrome-pndanbfilijihcfnljoojaemojiaogck-Default.desktop']
 
 [desktop/input-sources]
 sources=[('xkb', 'us'), ('xkb', 'ara')]

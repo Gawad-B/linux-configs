@@ -21,7 +21,7 @@ set -uo pipefail
 
 repo_url='https://github.com/Gawad-B/linux-configs.git'
 default_dir="$HOME/Coding/linux-configs"
-wallpaper='chatgpt-2026-09-20.png'
+wallpaper='kingdom-hearts-sora-kairi.jpg'
 # Not $USER: it is unset under sudo -i, cron, containers and some SSH setups.
 user=$(id -un)
 all_steps=(repos packages flatpaks dotfiles tools shell themes grub gnome services neovim)
@@ -31,11 +31,11 @@ declare -A step_help=(
   [packages]='dnf packages from packages/dnf.txt, full ffmpeg'
   [flatpaks]='Flathub apps from packages/flatpak.txt'
   [dotfiles]='back up conflicting files, then stow every config package'
-  [tools]='Starship, Zed, Claude Code, vex, Oh My Zsh, tmux plugins, npm/pipx tools'
+  [tools]='Starship, Claude Code, dacode, WhatsApp, Oh My Zsh, tmux plugins, npm/pipx tools'
   [shell]='make zsh the login shell'
-  [themes]='MacTahoe icons and cursors, wallpapers, font cache'
+  [themes]='MacTahoe cursors, wallpapers, font cache'
   [grub]='Elegant Mojave GRUB theme'
-  [gnome]='extensions, extension settings, desktop settings, wallpaper'
+  [gnome]='Nothing Dots icons, extensions and their settings, desktop settings, wallpaper'
   [services]='docker and postgresql'
   [neovim]='install Neovim plugins pinned in lazy-lock.json'
 )
@@ -93,15 +93,8 @@ step_repos() {
     sudo dnf copr enable -y imput/helium
   fi
 
-  # WhatsApp comes from the Shinux repository, set up by its release package.
-  if rpm -q shinux-release >/dev/null 2>&1; then
-    info 'Shinux repository already enabled'
-  else
-    sudo dnf install -y https://abdallah-shehawey.github.io/shinux-repo/rpm/shinux-release-1.2-1.noarch.rpm
-  fi
-
-  # Brave, VS Code, Claude Desktop and ChatGPT: plain .repo files, plus the
-  # ChatGPT signing key, which its repo file references by local path.
+  # Brave, VS Code, Claude Desktop, ChatGPT and Proton VPN: plain .repo files,
+  # plus the ChatGPT signing key, which its repo file references by local path.
   sudo install -m 644 "$repo"/packages/repos/*.repo /etc/yum.repos.d/
   sudo install -m 644 "$repo"/packages/keys/*.asc /etc/pki/rpm-gpg/
   info "vendor repositories: $(cd "$repo/packages/repos" && ls *.repo | tr '\n' ' ')"
@@ -198,11 +191,7 @@ step_tools() {
     curl -fsSL https://starship.rs/install.sh | sh -s -- --yes
   fi
 
-  if [ -x "$HOME/.local/bin/zed" ]; then
-    info 'Zed already installed'
-  else
-    curl -fsSL https://zed.dev/install.sh | sh
-  fi
+  # Zed is a Flatpak now (packages/flatpak.txt).
 
   if have claude || [ -x "$HOME/.local/bin/claude" ]; then
     info 'Claude Code already installed'
@@ -210,17 +199,30 @@ step_tools() {
     curl -fsSL https://claude.ai/install.sh | bash
   fi
 
-  # vex, my editor: the RPM from its latest GitHub release. The repo is
-  # private, so this needs a signed-in gh; without one, skip it and carry on.
-  if rpm -q vex >/dev/null 2>&1; then
-    info 'vex already installed'
-  elif gh auth status >/dev/null 2>&1; then
-    tmp=$(mktemp -d)
-    gh release download -R Gawad-B/vex --pattern '*.x86_64.rpm' --dir "$tmp"
-    sudo dnf install -y "$tmp"/*.rpm
-    rm -r "$tmp"
+  # dacode, my editor: the RPM from its latest GitHub release. The "latest"
+  # page redirects to the tag, which names the asset -- no API, no rate limit.
+  if rpm -q dacode >/dev/null 2>&1; then
+    info 'dacode already installed'
   else
-    warn 'vex skipped: its repo is private. Run `gh auth login`, then ./bootstrap.sh tools'
+    tag=$(curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/Gawad-B/dacode/releases/latest)
+    tag=${tag##*/tag/}
+    sudo dnf install -y "https://github.com/Gawad-B/dacode/releases/download/$tag/dacode-${tag#v}-1.x86_64.rpm"
+  fi
+
+  # WhatsApp: my own lightweight build. The repo is private, so this needs a
+  # signed-in gh; without one, skip it and carry on.
+  if [ -x "$HOME/.local/bin/whatsapp" ]; then
+    info 'WhatsApp already installed'
+  elif gh auth status >/dev/null 2>&1; then
+    if [ ! -d "$HOME/Coding/whatsapp-for-fedora/.git" ]; then
+      mkdir -p "$HOME/Coding"
+      gh repo clone Gawad-B/whatsapp-for-fedora "$HOME/Coding/whatsapp-for-fedora" -- -q
+    fi
+    # `autostart` also runs `install`: built, installed, and started hidden at login.
+    make -C "$HOME/Coding/whatsapp-for-fedora" autostart >/dev/null
+    info 'WhatsApp built and installed (starts hidden at login)'
+  else
+    warn 'WhatsApp skipped: its repo is private. Run `gh auth login`, then ./bootstrap.sh tools'
   fi
 
   # --keep-zshrc: .zshrc is already linked from this repo by the dotfiles step.
@@ -316,6 +318,17 @@ step_gnome() {
     info 'Prayer Times set to detect your location automatically'
   fi
   info 'extension settings loaded'
+
+  # Nothing Dots is generated from the installed apps, so it is built here,
+  # after the packages and Flatpaks. The watcher rebuilds it when apps change.
+  "$repo/icons/nothing-dots/apply.sh" >/dev/null
+  info 'Nothing Dots icons built and applied'
+  if systemctl --user is-enabled nothing-dots.path >/dev/null 2>&1; then
+    info 'Nothing Dots rebuild watcher already enabled'
+  else
+    "$repo/icons/nothing-dots/apply.sh" --install-watcher
+    info 'Nothing Dots rebuild watcher enabled'
+  fi
 
   dconf load /org/gnome/ < "$repo/gnome/desktop-settings.dconf"
   info 'desktop settings loaded (theme, keybindings, touchpad, dock favourites)'
@@ -472,7 +485,7 @@ main() {
 ${bold}Still up to you:${reset}
   - Log out and back in: loads new extensions, zsh and the docker group.
   - Sign in where needed: tailscale up, gh auth login, claude.
-  - vex is private: if it was skipped, run gh auth login, then ./bootstrap.sh tools.
+  - WhatsApp is private: if it was skipped, run gh auth login, then ./bootstrap.sh tools.
   - Not automated (no reliable installer): codex, agy, hermes, rtk, cua-driver.
   - GPU drivers are not installed; on an NVIDIA laptop install akmod-nvidia yourself.
 

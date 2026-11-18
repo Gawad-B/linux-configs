@@ -1,6 +1,6 @@
 # Linux dotfiles
 
-My whole Fedora 44 + GNOME setup: configs, apps, fonts, icons, GRUB theme,
+My whole Fedora (currently 45) + GNOME setup: configs, apps, fonts, icons, GRUB theme,
 wallpaper, GNOME extensions and desktop settings — reproducible on any machine
 with one command.
 
@@ -26,15 +26,15 @@ Already have a clone? Run it from there instead:
 
 | Step | What it does |
 | --- | --- |
-| `repos` | RPM Fusion, Helium COPR, Shinux, and the Brave / VS Code / Claude Desktop / ChatGPT repos |
+| `repos` | RPM Fusion, Helium COPR, and the Brave / VS Code / Claude Desktop / ChatGPT / Proton VPN repos |
 | `packages` | everything in [`packages/dnf.txt`](packages/dnf.txt), plus RPM Fusion's full ffmpeg |
 | `flatpaks` | [`packages/flatpak.txt`](packages/flatpak.txt) from Flathub |
 | `dotfiles` | backs up any file in the way, then stows every config package |
-| `tools` | Starship, Zed, Claude Code, vex, Oh My Zsh + plugins, tmux plugins, npm and pipx tools |
+| `tools` | Starship, Claude Code, dacode, my WhatsApp build, Oh My Zsh + plugins, tmux plugins, npm and pipx tools |
 | `shell` | makes zsh the login shell |
-| `themes` | MacTahoe icons and cursors, wallpapers, font cache |
+| `themes` | MacTahoe cursors, wallpapers, font cache |
 | `grub` | the Elegant Mojave GRUB theme |
-| `gnome` | extensions (incl. my own Prayer Times and Desk Widgets, built from source), their settings, keybindings, touchpad, dock favourites, wallpaper |
+| `gnome` | Nothing Dots icons (built from the installed apps), extensions (incl. my own Prayer Times, Desk Widgets and Dynland, built from source), their settings, keybindings, touchpad, dock favourites, wallpaper |
 | `services` | enables docker (and adds you to its group) and postgresql |
 | `neovim` | installs the plugins pinned in `lazy-lock.json` |
 
@@ -46,7 +46,10 @@ replaces is moved to `~/dotfiles-backup-<timestamp>/`, never deleted.
 
 **Not automated**, listed at the end of every run:
 
-- signing in: `tailscale up`, `gh auth login`, `claude`
+- signing in: `tailscale up`, `gh auth login`, `claude`, Proton VPN
+- WhatsApp (my [whatsapp-for-fedora](https://github.com/Gawad-B/whatsapp-for-fedora)
+  build) is a private repo: without `gh auth login` it is skipped — sign in,
+  then `./bootstrap.sh tools`
 - `codex`, `agy`, `hermes`, `rtk`, `cua-driver` — no installer I can rely on
 - GPU drivers — they depend on each laptop's hardware
 
@@ -94,20 +97,25 @@ so apps can't write their caches into this repo.
 
 - `packages/` — dnf, Flatpak, npm and pipx package lists, plus the third-party
   `.repo` files and the ChatGPT repo's public signing key.
-- `icons/install.sh` — **MacTahoe** icons and cursors, fetched from
-  [vinceliuice/MacTahoe-icon-theme](https://github.com/vinceliuice/MacTahoe-icon-theme)
+- `icons/nothing-dots/` — the generator for my **Nothing Dots** icon theme
+  (`apply.sh` builds it from the installed apps and switches to it;
+  `--install-watcher` rebuilds it whenever apps are added or removed).
+- `icons/install.sh` — **MacTahoe**, kept for its `MacTahoe-dark` cursors,
+  fetched from [vinceliuice/MacTahoe-icon-theme](https://github.com/vinceliuice/MacTahoe-icon-theme)
   (not vendored: ~215 MB).
 - `grub-theme/` — **Elegant Mojave (window-left-dark)**, vendored, with an
   installer that wires it into `/etc/default/grub`.
 - `gnome/` — see [`gnome/EXTENSIONS.md`](gnome/EXTENSIONS.md) for the
   extension list. `desktop-settings.dconf` and `extension-settings.dconf` hold
-  the settings; the `dump-*.sh` scripts re-capture them.
+  the settings; the `dump-*.sh` scripts re-capture them. `local-extensions/`
+  holds small extensions that live nowhere else.
 - `wallpapers/` — all copied to `~/.local/share/backgrounds`; the active one is
   set by the `wallpaper` variable at the top of `bootstrap.sh`.
 
 ## Current look
 
-- Icons and cursor: `MacTahoe-dark`
+- Icons: `Nothing-Dots` (my own); cursor: `MacTahoe-dark`
+- Wallpaper: Kingdom Hearts, Sora and Kairi
 - GTK: system `Adwaita`, dark preference
 - Fonts: JetBrains Mono in the terminals
 - Buttons on the left: close, minimize, maximize

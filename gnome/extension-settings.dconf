@@ -6,9 +6,9 @@ icon-saturation=0.0
 icon-size=0
 
 [blur-my-shell]
-pipelines={'pipeline_default': {'name': <'Default'>, 'effects': <[<{'type': <'dual_kawase_blur'>, 'id': <'effect_000000000000'>, 'params': <{'unscaled_radius': <30>, 'brightness': <0.59999999999999998>}>}>]>}, 'pipeline_migrated_dynamic_blur': {'name': <'Migrated dynamic blur'>, 'effects': <[<{'type': <'dual_kawase_blur'>, 'id': <'effect_migrated_dynamic_blur'>, 'params': <{'unscaled_radius': <60>, 'brightness': <0.59999999999999998>}>}>]>}}
+pipelines={'pipeline_default': {'name': <'Default'>, 'effects': <[<{'type': <'dual_kawase_blur'>, 'id': <'effect_000000000000'>, 'params': <{'unscaled_radius': <30>, 'brightness': <0.59999999999999998>}>}>]>}, 'pipeline_migrated_dynamic_blur': {'name': <'Migrated dynamic blur'>, 'effects': <[<{'type': <'dual_kawase_blur'>, 'id': <'effect_migrated_dynamic_blur'>, 'params': <{'unscaled_radius': <60>, 'brightness': <0.59999999999999998>}>}>]>}, 'pipeline_liquid_glass': {'name': <'Liquid Glass'>, 'effects': <[<{'type': <'luminosity'>, 'id': <'effect_liquid_glass_luminosity'>, 'params': <{'saturation_multiplicator': <1.1000000000000001>}>}>, <{'type': <'refraction'>, 'id': <'effect_liquid_glass_refraction'>, 'params': <{'tint': <0>}>}>, <{'type': <'noise'>, 'id': <'effect_liquid_glass_noise'>, 'params': <{'noise': <0.10000000000000001>}>}>]>}, 'pipeline_vapor_glass': {'name': <'Vapor Glass'>, 'effects': <[<{'type': <'luminosity'>, 'id': <'effect_vapor_glass_luminosity'>, 'params': <{'saturation_multiplicator': <1.1000000000000001>}>}>, <{'type': <'wave'>, 'id': <'effect_vapor_glass_wave'>, 'params': <@a{sv} {}>}>, <{'type': <'refraction'>, 'id': <'effect_vapor_glass_refraction'>, 'params': <{'tint': <0>}>}>, <{'type': <'noise'>, 'id': <'effect_vapor_glass_noise'>, 'params': <{'noise': <0.10000000000000001>}>}>]>}, 'pipeline_classic_light_background': {'name': <'Classic Light Background'>, 'effects': <[<{'type': <'dual_kawase_blur'>, 'id': <'effect_classic_light_blur'>, 'params': <{'unscaled_radius': <30>, 'brightness': <0.59999999999999998>}>}>, <{'type': <'color'>, 'id': <'effect_classic_light_color'>, 'params': <{'color': <(1.0, 1.0, 1.0, 0.25)>, 'blend_mode': <17>}>}>]>}, 'pipeline_classic_dark_background': {'name': <'Classic Dark Background'>, 'effects': <[<{'type': <'dual_kawase_blur'>, 'id': <'effect_classic_dark_blur'>, 'params': <{'unscaled_radius': <30>, 'brightness': <0.59999999999999998>}>}>, <{'type': <'color'>, 'id': <'effect_classic_dark_color'>, 'params': <{'color': <(0.40000000000000002, 0.40000000000000002, 0.40000000000000002, 0.34999999999999998)>, 'blend_mode': <17>}>}>]>}, 'pipeline_default_light': {'name': <'Default (Light mode)'>, 'effects': <[<{'type': <'dual_kawase_blur'>, 'id': <'effect_default_light_blur'>, 'params': <{'unscaled_radius': <30>, 'brightness': <1>}>}>, <{'type': <'color'>, 'id': <'effect_default_light_color'>, 'params': <{'color': <(1.0, 1.0, 1.0, 0.5)>, 'blend_mode': <3>}>}>]>}}
 rounded-blur-found=false
-settings-version=7
+settings-version=10
 
 [blur-my-shell/appfolder]
 pipeline='pipeline_migrated_dynamic_blur'
@@ -41,6 +41,7 @@ pipeline='pipeline_default'
 
 [blur-my-shell/popup]
 pipeline='pipeline_default'
+screenshot-corner-radius=36
 
 [blur-my-shell/screenshot]
 pipeline='pipeline_default'
@@ -49,10 +50,10 @@ pipeline='pipeline_default'
 pipeline='pipeline_migrated_dynamic_blur'
 
 [caffeine]
-cli-toggle=true
+cli-toggle=false
 duration-timer=2
 duration-timer-list=[900, 1800, 3600]
-indicator-position-max=3
+indicator-position-max=1
 screen-blank='always'
 user-enabled=true
 
@@ -60,6 +61,7 @@ user-enabled=true
 display-mode=0
 next-history-clear=-1
 pinned-on-bottom=true
+toggle-menu=['<Super>Alt_L']
 
 [dash-to-dock]
 always-center-icons=true
@@ -79,11 +81,23 @@ preferred-monitor=-2
 preferred-monitor-by-connector='eDP-1'
 
 [desk-widgets]
+github-token-serial=1
 glass=true
-grid-gap=20
-layout='{"version":1,"widgets":[{"id":"dafb43","type":"clock","size":"S","col":0,"row":0,"config":{"face":"digital","seconds":true}},{"id":"25176f","type":"calendar","size":"L","col":9,"row":0,"config":{"birthdays":false}},{"id":"f52806","type":"weather","size":"S","col":1,"row":0,"config":{}},{"id":"e4631b","type":"reminders","size":"M","col":9,"row":2,"config":{}},{"id":"1b0f9d","type":"battery","size":"S","col":1,"row":1,"config":{}},{"id":"5c86e5","type":"media","size":"S","col":0,"row":1,"config":{}}]}'
-theme-mode='system'
+grid-gap=14
+layout='{"version":1,"widgets":[{"id":"dafb43","type":"clock","size":"S","col":0,"row":0,"config":{"face":"digital","seconds":true}},{"id":"25176f","type":"calendar","size":"S","col":1,"row":0,"config":{"birthdays":false}},{"id":"f52806","type":"weather","size":"S","col":1,"row":1,"config":{}},{"id":"b8ed91","type":"system","size":"S","col":0,"row":1,"config":{}},{"id":"b69394","type":"github","size":"M","col":0,"row":2,"config":{}},{"id":"155406","type":"reminders","size":"M","col":0,"row":3,"config":{}}]}'
+theme-mode='dark'
 translucency=100
+widget-style='nothing'
+
+[dynland]
+auto-hide=false
+debug-workspace-log=false
+prayer-lead-minutes=10
+reserve-space=false
+show-activities=true
+show-clock=true
+show-tray-indicators=true
+style='blur'
 
 [just-perfection]
 activities-button=false
@@ -124,7 +138,7 @@ monitor-count=1
 preferred-monitor=0
 scale-height=0.10000000000000001
 scale-width=0.10000000000000001
-shortcut-search=['<Control>space']
+shortcut-search=@as []
 show-panel-icon=false
 
 [user-theme]

@@ -26,3 +26,8 @@ private/
 .bash_history
 .zsh_history
 .zcompdump*
+
+# Written next to the Nothing Dots generator when it runs.
+icons/nothing-dots/desktop-backup/
+icons/nothing-dots/preview.html
+__pycache__/
