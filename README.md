@@ -98,7 +98,7 @@ so apps can't write their caches into this repo.
 - `packages/` — dnf, Flatpak, npm and pipx package lists, plus the third-party
   `.repo` files and the ChatGPT repo's public signing key.
 - `icons/nothing-dots/` — the generator for my **Nothing Dots** icon theme
-  (`apply.sh` builds it from the installed apps and switches to it;
+  (`apply.sh` builds its Dark and Light variants from the installed apps;
   `--install-watcher` rebuilds it whenever apps are added or removed).
 - `icons/install.sh` — **MacTahoe**, kept for its `MacTahoe-dark` cursors,
   fetched from [vinceliuice/MacTahoe-icon-theme](https://github.com/vinceliuice/MacTahoe-icon-theme)
@@ -114,7 +114,7 @@ so apps can't write their caches into this repo.
 
 ## Current look
 
-- Icons: `Nothing-Dots` (my own); cursor: `MacTahoe-dark`
+- Icons: `Nothing-Dots-Dark` (my own; a Light variant is built alongside); cursor: `MacTahoe-dark`
 - Wallpaper: Kingdom Hearts, Sora and Kairi
 - GTK: system `Adwaita`, dark preference
 - Fonts: JetBrains Mono in the terminals

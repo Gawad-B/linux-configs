@@ -50,10 +50,11 @@ pipeline='pipeline_default'
 pipeline='pipeline_migrated_dynamic_blur'
 
 [caffeine]
-cli-toggle=false
+cli-toggle=true
+countdown-timer=0
 duration-timer=2
 duration-timer-list=[900, 1800, 3600]
-indicator-position-max=1
+indicator-position-max=0
 screen-blank='always'
 user-enabled=true
 
@@ -82,20 +83,27 @@ preferred-monitor-by-connector='eDP-1'
 
 [desk-widgets]
 github-token-serial=1
-glass=true
+glass=false
 grid-gap=14
-layout='{"version":1,"widgets":[{"id":"dafb43","type":"clock","size":"S","col":0,"row":0,"config":{"face":"digital","seconds":true}},{"id":"25176f","type":"calendar","size":"S","col":1,"row":0,"config":{"birthdays":false}},{"id":"f52806","type":"weather","size":"S","col":1,"row":1,"config":{}},{"id":"b8ed91","type":"system","size":"S","col":0,"row":1,"config":{}},{"id":"b69394","type":"github","size":"M","col":0,"row":2,"config":{}},{"id":"155406","type":"reminders","size":"M","col":0,"row":3,"config":{}}]}'
+layout='{"version":1,"widgets":[{"id":"dafb43","type":"clock","size":"S","col":7,"row":0,"config":{"face":"digital","seconds":true}},{"id":"25176f","type":"calendar","size":"S","col":8,"row":0,"config":{"birthdays":false}},{"id":"f52806","type":"weather","size":"S","col":8,"row":1,"config":{}},{"id":"b8ed91","type":"system","size":"S","col":7,"row":1,"config":{}},{"id":"b69394","type":"github","size":"M","col":7,"row":2,"config":{}},{"id":"155406","type":"reminders","size":"M","col":7,"row":3,"config":{}}]}'
 theme-mode='dark'
-translucency=100
+translucency=25
 widget-style='nothing'
 
 [dynland]
 auto-hide=false
+bar-icon-only=['vitalsMenu', 'prayer-times']
+bar-notch-pages=false
+bar-quick-indicators=['network', 'bluetooth', 'battery', 'caffeine']
+bar-start-indicators=['vitalsMenu', 'prayer-times', 'clipboardIndicator']
+bar-status-order=['dwellClick', 'a11y', 'keyboard', 'appindicator-org.kde.StatusNotifierItem-29608-1', 'appindicator-:1.78@/org/ayatana/NotificationItem/YdZnXhxq3_', 'screenRecording', 'screenSharing', 'appindicator-:1.132@/StatusNotifierItem', 'quickSettings']
 debug-workspace-log=false
+layout='bar'
 prayer-lead-minutes=10
-reserve-space=false
-show-activities=true
+reserve-space=true
+show-activities=false
 show-clock=true
+show-quick-settings=true
 show-tray-indicators=true
 style='blur'
 

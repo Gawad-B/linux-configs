@@ -61,12 +61,18 @@ esac
 
 mkdir -p "$backup"
 current="$(gsettings get org.gnome.desktop.interface icon-theme | tr -d "'")"
-[[ "$current" != "Nothing-Dots" && ! -f "$backup/previous-theme" ]] && echo "$current" > "$backup/previous-theme"
+[[ "$current" != Nothing-Dots* && ! -f "$backup/previous-theme" ]] && echo "$current" > "$backup/previous-theme"
 
-python3 "$here/build.py" "$HOME/.local/share/icons/Nothing-Dots"
-gtk-update-icon-cache -f -q "$HOME/.local/share/icons/Nothing-Dots" || true
+icons="$HOME/.local/share/icons"
+# Builds Nothing-Dots-Dark and writes the Nothing-Dots-Light sibling next to it.
+python3 "$here/build.py" "$icons/Nothing-Dots-Dark"
+for v in Dark Light; do gtk-update-icon-cache -f -q "$icons/Nothing-Dots-$v" || true; done
+rm -rf "$icons/Nothing-Dots"  # old single-variant theme (before Dark/Light split)
 
 if [[ "${1:-}" != "--watch" ]]; then
-  gsettings set org.gnome.desktop.interface icon-theme Nothing-Dots
-  echo "Nothing Dots applied."
+  # Keep whichever variant you picked in Tweaks; otherwise default to Light.
+  if [[ "$current" != Nothing-Dots-Dark && "$current" != Nothing-Dots-Light ]]; then
+    gsettings set org.gnome.desktop.interface icon-theme Nothing-Dots-Light
+  fi
+  echo "Nothing Dots applied (pick Dark or Light in Tweaks > Appearance > Icons)."
 fi

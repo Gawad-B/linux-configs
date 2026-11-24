@@ -1041,7 +1041,7 @@ def index_theme():
     from extras import INDEX_DIRS, CONTEXT
     # Inherit Adwaita (not MacTahoe): MacTahoe's many specific mimetype icons would
     # otherwise win over our generic ones. Small symbolic UI icons come from Adwaita.
-    head = ("[Icon Theme]\nName=Nothing Dots\n"
+    head = ("[Icon Theme]\nName=Nothing Dots Dark\n"
             "Comment=Monochrome dot-matrix icons in the Nothing style\n"
             "Inherits=Adwaita,hicolor\n"
             f"Directories={','.join('scalable/' + d for d in INDEX_DIRS)}\n")
@@ -1079,7 +1079,7 @@ def main():
 
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     preview_all = "--preview-auto" in sys.argv  # trace every app, to judge the fallback
-    out = Path(args[0] if args else os.path.expanduser("~/.local/share/icons/Nothing-Dots"))
+    out = Path(args[0] if args else os.path.expanduser("~/.local/share/icons/Nothing-Dots-Dark"))
     backup = Path(__file__).with_name("desktop-backup")
     apps = out / "scalable" / "apps"
     shutil.rmtree(apps, ignore_errors=True)  # rebuilt from scratch so removed apps disappear
@@ -1134,6 +1134,42 @@ def main():
         print("repointed launchers:", ", ".join(repointed))
     if skipped:
         print("system launchers with absolute icon paths (left alone):", ", ".join(skipped))
+
+    light = out.with_name(out.name.removesuffix("-Dark") + "-Light")
+    if light != out:
+        make_light(out, light)
+        print(f"light variant -> {light}")
+
+
+# Dark palette -> light palette. Red stays. Every colour the dark theme uses is listed,
+# so the swap is total (one regex pass, no chained replacements).
+LIGHT = {
+    "#f2f2f2": "#141414",  # lit dots
+    "#0d0d0d": "#f4f4f1",  # circle background
+    "#262626": "#d4d4d0",  # circle ring
+    "#232323": "#dcdcd8",  # circle unlit dots
+    "#151515": "#efefec",  # folder / page fill
+    "#2e2e2e": "#b9b9b4",  # folder / page edge
+    "#333333": "#d2d2cd",  # folder unlit dots
+}
+
+
+def make_light(src, dst):
+    import re
+    import shutil
+    pat = re.compile("|".join(map(re.escape, LIGHT)))
+    shutil.rmtree(dst, ignore_errors=True)
+    for f in src.rglob("*"):
+        if f.is_dir() or f.name == "icon-theme.cache":
+            continue
+        target = dst / f.relative_to(src)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        text = f.read_text()
+        if f.suffix == ".svg":
+            text = pat.sub(lambda m: LIGHT[m.group(0)], text)
+        elif f.name == "index.theme":
+            text = text.replace("Name=Nothing Dots Dark", "Name=Nothing Dots Light")
+        target.write_text(text)
 
 
 if __name__ == "__main__":

@@ -1,9 +1,9 @@
 # GNOME Shell extensions
 
-Captured on 2026-11-18 from Fedora 45, GNOME Shell 50.
+Captured on 2026-11-24 from Fedora 45, GNOME Shell 50.
 
-13 extensions are enabled: nine from [extensions.gnome.org](https://extensions.gnome.org)
-or the system, and four of my own.
+12 extensions are enabled: eight from [extensions.gnome.org](https://extensions.gnome.org)
+and four of my own.
 
 ## Enabled
 
@@ -17,7 +17,6 @@ or the system, and four of my own.
 | Dash to Dock | 110 | `dash-to-dock@micxgx.gmail.com` | [micheleg/dash-to-dock](https://micheleg.github.io/dash-to-dock/) |
 | Search Light | 101 | `search-light@icedman.github.com` | [icedman/search-light](https://github.com/icedman/search-light) |
 | Vitals | 86 | `Vitals@CoreCoding.com` | [corecoding/Vitals](https://github.com/corecoding/Vitals) |
-| Apps Menu | — | `apps-menu@gnome-shell-extensions.gcampax.github.com` | ships with `gnome-shell-extensions` (system) |
 
 ### My own
 
@@ -33,6 +32,8 @@ or the system, and four of my own.
 Not restored on a new machine:
 
 - `just-perfection-desktop@just-perfection` (removed from the enabled set in November)
+- `apps-menu@gnome-shell-extensions.gcampax.github.com` (disabled in November;
+  ships with `gnome-shell-extensions`)
 - `background-logo@fedorahosted.org`, `launch-new-instance@…`, `places-menu@…`,
   `window-list@…` — Fedora's bundled extensions
 
