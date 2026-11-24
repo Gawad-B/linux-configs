@@ -126,24 +126,33 @@ step_packages() {
 }
 
 step_flatpaks() {
-  local apps todo=() a
+  local apps failed=() a
   have flatpak || sudo dnf install -y flatpak
 
-  if flatpak remotes --system --columns=name | grep -qx flathub; then
-    info 'Flathub already configured'
-  else
-    sudo flatpak remote-add --system --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-  fi
+  # A fresh Fedora often has Flathub configured but disabled (third-party
+  # software left off at first boot). `flatpak remotes` hides disabled remotes
+  # and `remote-add --if-not-exists` leaves them disabled, so every install
+  # then fails with "Can't fetch summary from disabled remote". Add it if
+  # missing, and always enable it.
+  sudo flatpak remote-add --system --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+  sudo flatpak remote-modify --system --enable flathub
+  info 'Flathub added and enabled'
 
+  # One app at a time, so a single unavailable app can't sink the rest.
   mapfile -t apps < <(read_list packages/flatpak.txt)
   for a in "${apps[@]}"; do
-    flatpak info --system "$a" >/dev/null 2>&1 || todo+=("$a")
+    if flatpak info --system "$a" >/dev/null 2>&1; then
+      info "$a already installed"
+    elif sudo flatpak install -y --noninteractive --system flathub "$a"; then
+      info "$a installed"
+    else
+      failed+=("$a")
+    fi
   done
 
-  if [ ${#todo[@]} -eq 0 ]; then
-    info "all ${#apps[@]} Flatpaks already installed"
-  else
-    sudo flatpak install -y --noninteractive --system flathub "${todo[@]}"
+  if [ ${#failed[@]} -gt 0 ]; then
+    warn "could not install: ${failed[*]}"
+    return 1
   fi
 }
 
