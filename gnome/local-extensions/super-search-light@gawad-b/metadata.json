@@ -2,5 +2,5 @@
   "uuid": "super-search-light@gawad-b",
   "name": "Super Key → Search Light",
   "description": "Tapping the Super key toggles Search Light instead of the Activities overview.",
-  "shell-version": ["51"]
+  "shell-version": ["48", "49", "50", "51"]
 }

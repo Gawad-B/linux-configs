@@ -76,12 +76,24 @@ while read -r uuid; do
 
   if [ -d "/usr/share/gnome-shell/extensions/$uuid" ]; then
     printf '  ships with the system\n'
+  elif [ -d "$here/local-extensions/$uuid" ]; then
+    # The repo copy is authoritative (e.g. my GNOME 51 port of Search Light),
+    # so it also replaces an older install from extensions.gnome.org.
+    # "Matches" means every file in the repo copy is identical; extra files
+    # in the installed copy (backups and the like) don't count.
+    src="$here/local-extensions/$uuid"
+    if [ -d "$user_ext/$uuid" ] && (cd "$src" && find . -type f) | while read -r f; do
+         cmp -s "$src/$f" "$user_ext/$uuid/$f" || exit 1
+       done; then
+      printf '  up to date with local-extensions/\n'
+    else
+      mkdir -p "$user_ext"
+      rm -rf "${user_ext:?}/$uuid"
+      cp -r "$src" "$user_ext/"
+      printf '  installed from local-extensions/\n'
+    fi
   elif [ -d "$user_ext/$uuid" ]; then
     printf '  already installed\n'
-  elif [ -d "$here/local-extensions/$uuid" ]; then
-    mkdir -p "$user_ext"
-    cp -r "$here/local-extensions/$uuid" "$user_ext/"
-    printf '  copied from local-extensions/\n'
   elif repo=$(mine_repo "$uuid") && [ -n "$repo" ]; then
     install_from_source "$repo" || { printf '  !! build failed\n'; failed=$((failed + 1)); }
   else

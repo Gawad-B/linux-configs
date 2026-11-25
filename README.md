@@ -26,11 +26,11 @@ Already have a clone? Run it from there instead:
 
 | Step | What it does |
 | --- | --- |
-| `repos` | RPM Fusion, Helium COPR, and the Brave / VS Code / Claude Desktop / ChatGPT / Proton VPN repos |
+| `repos` | RPM Fusion, Helium COPR, and the Brave / VS Code / Claude Desktop / ChatGPT repos |
 | `packages` | everything in [`packages/dnf.txt`](packages/dnf.txt), plus RPM Fusion's full ffmpeg |
-| `flatpaks` | [`packages/flatpak.txt`](packages/flatpak.txt) from Flathub |
-| `dotfiles` | backs up any file in the way, then stows every config package |
-| `tools` | Starship, Claude Code, dacode, my WhatsApp build, Oh My Zsh + plugins, tmux plugins, npm and pipx tools |
+| `flatpaks` | [`packages/flatpak.txt`](packages/flatpak.txt) from Flathub (enabling Flathub first); sets LocalSend to close to the tray |
+| `dotfiles` | backs up any file in the way, then stows every config package (incl. LocalSend's start-hidden-at-login entry) |
+| `tools` | Starship, Claude Code, dacode, my [WhatsApp build](https://github.com/Gawad-B/whatsapp-for-fedora) (starts hidden at login), Oh My Zsh + plugins, tmux plugins, npm and pipx tools |
 | `shell` | makes zsh the login shell |
 | `themes` | MacTahoe cursors, wallpapers, font cache |
 | `grub` | the Elegant Mojave GRUB theme |
@@ -46,10 +46,7 @@ replaces is moved to `~/dotfiles-backup-<timestamp>/`, never deleted.
 
 **Not automated**, listed at the end of every run:
 
-- signing in: `tailscale up`, `gh auth login`, `claude`, Proton VPN
-- WhatsApp (my [whatsapp-for-fedora](https://github.com/Gawad-B/whatsapp-for-fedora)
-  build) is a private repo: without `gh auth login` it is skipped — sign in,
-  then `./bootstrap.sh tools`
+- signing in: `tailscale up`, `gh auth login`, `claude`
 - `codex`, `agy`, `hermes`, `rtk`, `cua-driver` — no installer I can rely on
 - GPU drivers — they depend on each laptop's hardware
 

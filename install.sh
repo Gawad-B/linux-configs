@@ -3,7 +3,7 @@
 set -eu
 
 repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-packages='shell git alacritty kitty fastfetch starship tmux nvim btop zed vscode gtk-theme'
+packages='shell git alacritty kitty fastfetch starship tmux nvim btop zed vscode localsend gtk-theme'
 
 if ! command -v stow >/dev/null 2>&1; then
   printf '%s\n' 'GNU Stow is required. Install it with your distribution package manager, then re-run this script.' >&2

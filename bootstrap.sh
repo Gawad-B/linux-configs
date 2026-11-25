@@ -93,7 +93,7 @@ step_repos() {
     sudo dnf copr enable -y imput/helium
   fi
 
-  # Brave, VS Code, Claude Desktop, ChatGPT and Proton VPN: plain .repo files,
+  # Brave, VS Code, Claude Desktop and ChatGPT: plain .repo files,
   # plus the ChatGPT signing key, which its repo file references by local path.
   sudo install -m 644 "$repo"/packages/repos/*.repo /etc/yum.repos.d/
   sudo install -m 644 "$repo"/packages/keys/*.asc /etc/pki/rpm-gpg/
@@ -149,6 +149,32 @@ step_flatpaks() {
       failed+=("$a")
     fi
   done
+
+  # LocalSend: close to the tray instead of quitting (a fresh install quits).
+  # Only this one key is written; its alias, history and keys stay untouched.
+  # A running LocalSend holds its settings in memory and would write them back
+  # over ours, so stop it first and start it again hidden afterwards.
+  local ls_app=org.localsend.localsend_app ls_was_running=no
+  local ls_prefs="$HOME/.var/app/$ls_app/data/localsend_app/shared_preferences.json"
+  if flatpak info --system "$ls_app" >/dev/null 2>&1; then
+    if flatpak ps --columns=application 2>/dev/null | grep -qx "$ls_app"; then
+      ls_was_running=yes
+      flatpak kill "$ls_app"
+      sleep 1
+    fi
+    mkdir -p "$(dirname "$ls_prefs")"
+    python3 -I -c '
+import json, os, sys
+p = sys.argv[1]
+d = json.load(open(p)) if os.path.exists(p) and os.path.getsize(p) else {}
+d["flutter.ls_minimize_to_tray"] = True
+json.dump(d, open(p, "w"))
+' "$ls_prefs"
+    if [ "$ls_was_running" = yes ]; then
+      setsid -f flatpak run --command=localsend "$ls_app" --hidden >/dev/null 2>&1
+    fi
+    info 'LocalSend set to close to the tray'
+  fi
 
   if [ ${#failed[@]} -gt 0 ]; then
     warn "could not install: ${failed[*]}"
@@ -218,20 +244,22 @@ step_tools() {
     sudo dnf install -y "https://github.com/Gawad-B/dacode/releases/download/$tag/dacode-${tag#v}-1.x86_64.rpm"
   fi
 
-  # WhatsApp: my own lightweight build. The repo is private, so this needs a
-  # signed-in gh; without one, skip it and carry on.
+  # WhatsApp: my own lightweight build (public repo, so no GitHub login).
+  # Plain HTTPS rather than `gh repo clone`, which follows gh's git protocol
+  # setting and fails on a machine without SSH keys.
+  # A failure here must not end the step early, or Oh My Zsh and the rest
+  # below would be skipped; GIT_TERMINAL_PROMPT=0 stops git from waiting for a
+  # username if the repo is ever unreachable.
   if [ -x "$HOME/.local/bin/whatsapp" ]; then
     info 'WhatsApp already installed'
-  elif gh auth status >/dev/null 2>&1; then
-    if [ ! -d "$HOME/Coding/whatsapp-for-fedora/.git" ]; then
-      mkdir -p "$HOME/Coding"
-      gh repo clone Gawad-B/whatsapp-for-fedora "$HOME/Coding/whatsapp-for-fedora" -- -q
-    fi
+  elif { [ -d "$HOME/Coding/whatsapp-for-fedora/.git" ] \
+         || { mkdir -p "$HOME/Coding" && GIT_TERMINAL_PROMPT=0 git clone -q \
+              https://github.com/Gawad-B/whatsapp-for-fedora.git "$HOME/Coding/whatsapp-for-fedora"; }; } \
+       && make -C "$HOME/Coding/whatsapp-for-fedora" autostart >/dev/null; then
     # `autostart` also runs `install`: built, installed, and started hidden at login.
-    make -C "$HOME/Coding/whatsapp-for-fedora" autostart >/dev/null
     info 'WhatsApp built and installed (starts hidden at login)'
   else
-    warn 'WhatsApp skipped: its repo is private. Run `gh auth login`, then ./bootstrap.sh tools'
+    warn 'WhatsApp could not be cloned or built; the rest of this step continues'
   fi
 
   # --keep-zshrc: .zshrc is already linked from this repo by the dotfiles step.
@@ -494,7 +522,6 @@ main() {
 ${bold}Still up to you:${reset}
   - Log out and back in: loads new extensions, zsh and the docker group.
   - Sign in where needed: tailscale up, gh auth login, claude.
-  - WhatsApp is private: if it was skipped, run gh auth login, then ./bootstrap.sh tools.
   - Not automated (no reliable installer): codex, agy, hermes, rtk, cua-driver.
   - GPU drivers are not installed; on an NVIDIA laptop install akmod-nvidia yourself.
 

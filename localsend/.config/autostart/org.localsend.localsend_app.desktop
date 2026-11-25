@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=LocalSend
+Exec=/usr/bin/flatpak run --branch=stable --arch=x86_64 --command=localsend org.localsend.localsend_app --hidden
+Icon=org.localsend.localsend_app
+Type=Application
+Terminal=false
+Categories=Utility;FileTransfer;Network;
+Comment=Share files to nearby devices
+GenericName=Local file sharing
+StartupNotify=false
+X-Desktop-File-Install-Version=0.28
+X-Flatpak=org.localsend.localsend_app

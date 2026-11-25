@@ -42,7 +42,6 @@ helium-bin
 chromium
 claude-desktop-unofficial
 chatgpt
-proton-vpn-gnome-desktop
 steam-devices
 mpv
 # WhatsApp is my own build (whatsapp-for-fedora), installed by bootstrap.sh

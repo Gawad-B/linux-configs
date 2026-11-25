@@ -17,8 +17,13 @@ export default class SuperSearchLight extends Extension {
         // ... and send the key to Search Light instead.
         this._id = global.display.connect('overlay-key', () => {
             const sl = Main.extensionManager.lookup(SEARCH_LIGHT)?.stateObj;
-            if (sl?._queueToggle)
-                sl._queueToggle();
+            // _queueToggle in recent Search Light; _toggle_search_light in
+            // older builds (e.g. v42, the newest on extensions.gnome.org).
+            const toggle = sl?._queueToggle ?? sl?._toggle_search_light;
+            if (toggle)
+                toggle.call(sl);
+            else
+                console.warn('super-search-light: Search Light is not active or has no toggle method');
         });
     }
 

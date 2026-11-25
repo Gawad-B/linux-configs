@@ -15,7 +15,7 @@ and four of my own.
 | Clipboard Indicator | 74 | `clipboard-indicator@tudmotu.com` | [Tudmotu/gnome-shell-extension-clipboard-indicator](https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator) |
 | Compiz alike magic lamp effect | 25 | `compiz-alike-magic-lamp-effect@hermes83.github.com` | [hermes83/compiz-alike-magic-lamp-effect](https://github.com/hermes83/compiz-alike-magic-lamp-effect) |
 | Dash to Dock | 110 | `dash-to-dock@micxgx.gmail.com` | [micheleg/dash-to-dock](https://micheleg.github.io/dash-to-dock/) |
-| Search Light | 101 | `search-light@icedman.github.com` | [icedman/search-light](https://github.com/icedman/search-light) |
+| Search Light | 101 | `search-light@icedman.github.com` | my GNOME 51 port of [icedman/search-light](https://github.com/icedman/search-light), kept in [`local-extensions/`](local-extensions/search-light@icedman.github.com) — extensions.gnome.org stops at v42 for GNOME 49 |
 | Vitals | 86 | `Vitals@CoreCoding.com` | [corecoding/Vitals](https://github.com/corecoding/Vitals) |
 
 ### My own
