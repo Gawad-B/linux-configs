@@ -85,6 +85,7 @@ Each directory mirrors its destination below `$HOME`; for example,
 - `git` — Git identity and preferences
 - `alacritty`, `kitty`, `fastfetch`, `starship`, `tmux`, `btop` — terminal tooling
 - `nvim`, `vscode`, `zed` — editor configuration
+- `wireplumber` — stops WirePlumber remembering a volume for WhatsApp, which once left every WhatsApp sound at 0% or 5%
 - `gtk-theme` — the Rosepine Dark GTK theme (installed, not active)
 
 Files are linked individually (`stow --no-folding`), never whole directories,
