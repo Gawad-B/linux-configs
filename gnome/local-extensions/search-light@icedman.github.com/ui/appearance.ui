@@ -266,7 +266,7 @@
         <child>
           <object class="AdwActionRow">
             <property name="title" translatable="yes">Background Blur</property>
-            <property name="subtitle" translatable="yes">Add background blur with current wallpaper. Requires imagemagick installed.</property>
+            <property name="subtitle" translatable="yes">Blur the windows and wallpaper behind the panel while it is shown.</property>
             <property name="activatable-widget">blur-background</property>
             <child>
               <object class="GtkSwitch" id="blur-background">
@@ -277,7 +277,6 @@
         </child>
         <child>
           <object class="AdwActionRow">
-            <property name="visible">false</property>
             <property name="title" translatable="yes">Sigma</property>
             <property name="subtitle" translatable="yes">The intensity of the blur.</property>
             <property name="activatable-widget">blur-sigma</property>
@@ -297,9 +296,8 @@
         </child>
         <child>
           <object class="AdwActionRow">
-            <property name="visible">false</property>
             <property name="title" translatable="yes">Brightness</property>
-            <property name="subtitle" translatable="yes">The brightness of the blur effect, a high value might make the text harder to read.</property>
+            <property name="subtitle" translatable="yes">The brightness of the blur. The tint over it is made darker as needed to keep the text readable.</property>
             <property name="activatable-widget">blur-brightness</property>
             <child>
               <object class="GtkScale" id="blur-brightness">

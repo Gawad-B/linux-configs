@@ -32,6 +32,14 @@ install_theme() {
 
 install_theme https://github.com/vinceliuice/MacTahoe-icon-theme.git MacTahoe
 
+# Fill MacTahoe's gaps (one macOS-style icon per installed launcher) and keep them
+# up to date as apps come and go.
+here=$(cd "$(dirname "$0")" && pwd)
+if [ -z "${ICON_DEST:-}" ] || [ "$dest" = "$HOME/.local/share/icons" ]; then
+  "$here/mactahoe-extras/apply.sh"
+  "$here/mactahoe-extras/apply.sh" --install-watcher
+fi
+
 # WhiteSur is also installed on this machine but is not the active theme.
 # Uncomment to install it as well.
 # install_theme https://github.com/vinceliuice/WhiteSur-icon-theme.git WhiteSur

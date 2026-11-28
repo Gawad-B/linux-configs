@@ -6,7 +6,8 @@ compiz-alike-magic-lamp-effect@hermes83.github.com
 dash-to-dock@micxgx.gmail.com
 desk-widgets@gawad-b.github.io
 dynland@gawad-b.github.io
+mission-control@gawad-b.github.io
+nonlinear-animation@nbgroup
 prayer-times@gawad-b.github.io
 search-light@icedman.github.com
-super-search-light@gawad-b
 Vitals@CoreCoding.com

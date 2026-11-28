@@ -67,9 +67,9 @@
         <description>Preferences-Extension message bus</description>
     </key>
     <key type="b" name="blur-background">
-        <default>false</default>
+        <default>true</default>
         <summary>Enable background blur</summary>
-        <description></description>
+        <description>Blur what lies behind the panel (windows and wallpaper) while it is shown.</description>
     </key>
     <key type="d" name="blur-sigma">
         <default>30</default>

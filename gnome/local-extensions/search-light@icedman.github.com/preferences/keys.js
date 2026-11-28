@@ -55,7 +55,7 @@ export const SettingsKeys = () => {
       widget_type: 'switch',
     },
     'blur-background': {
-      default_value: false,
+      default_value: true,
       widget_type: 'switch',
     },
     'blur-sigma': {

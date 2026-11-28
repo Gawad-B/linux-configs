@@ -23,6 +23,14 @@ user_ext="$HOME/.local/share/gnome-shell/extensions"
 src_dir="$HOME/Coding"
 failed=0
 
+# Extensions I no longer use. Machines set up earlier still have them enabled,
+# and this script only ever adds, so they are disabled and removed here.
+#   super-search-light: Super opens the overview again; Search Light has its
+#   own Super+Space shortcut (2026-11-27).
+#   vertical-workspaces (V-Shell): replaced by Mission Control, which reshapes
+#   the overview itself and stays off while V-Shell is active (2026-11-28).
+retired='super-search-light@gawad-b vertical-workspaces@G-dH.github.com'
+
 printf 'GNOME Shell %s\n\n' "$shell_ver"
 
 mine_repo() {
@@ -30,6 +38,7 @@ mine_repo() {
     prayer-times@gawad-b.github.io) echo 'https://github.com/Gawad-B/Prayer_TImes.git' ;;
     desk-widgets@gawad-b.github.io) echo 'https://github.com/Gawad-B/Gnome-Widgets.git' ;;
     dynland@gawad-b.github.io)      echo 'https://github.com/Gawad-B/Dynland.git' ;;
+    mission-control@gawad-b.github.io) echo 'https://github.com/Gawad-B/Mission-Control.git' ;;
   esac
 }
 
@@ -61,7 +70,8 @@ install_from_source() {
     git clone -q "$repo" "$dir"
   fi
 
-  # Each repo's own Makefile knows how to build and install it.
+  # Each repo's own Makefile knows how to build and install it (Mission
+  # Control's compiles its schema with glib-compile-schemas, from glib2).
   (
     cd "$dir"
     if [ -f package-lock.json ]; then npm ci --silent --no-audit --no-fund; fi
@@ -101,17 +111,39 @@ while read -r uuid; do
   fi
 done < "$here/extensions.txt"
 
+for uuid in $retired; do
+  if [ -d "$user_ext/$uuid" ]; then
+    gnome-extensions disable "$uuid" 2>/dev/null || true
+    rm -rf "${user_ext:?}/$uuid"
+    printf '%s\n  retired: disabled and removed\n' "$uuid"
+  fi
+done
+
 # Merge extensions.txt into the enabled list rather than replacing it, so
-# anything else enabled on this machine stays enabled.
+# anything else enabled on this machine stays enabled -- except retired ones.
 printf '\nEnabling (takes effect on next login)...\n'
 merged=$(gsettings get org.gnome.shell enabled-extensions | python3 -I -c '
 import ast, sys
 raw = sys.stdin.read().strip()
 current = [] if raw.startswith("@as") else ast.literal_eval(raw)
+retired = sys.argv[2].split()
+current = [u for u in current if u not in retired]
 wanted = [l.strip() for l in open(sys.argv[1]) if l.strip()]
 print(repr(current + [u for u in wanted if u not in current]))
-' "$here/extensions.txt")
+' "$here/extensions.txt" "$retired")
 gsettings set org.gnome.shell enabled-extensions "$merged"
+
+# GNOME treats disabled-extensions as an override: an extension switched off
+# once (e.g. V-Shell, disabled months ago) stays off even when it is in the
+# enabled list. Drop every wanted extension from it.
+undisabled=$(gsettings get org.gnome.shell disabled-extensions | python3 -I -c '
+import ast, sys
+raw = sys.stdin.read().strip()
+current = [] if raw.startswith("@as") else ast.literal_eval(raw)
+wanted = {l.strip() for l in open(sys.argv[1]) if l.strip()}
+print(repr([u for u in current if u not in wanted]))
+' "$here/extensions.txt")
+gsettings set org.gnome.shell disabled-extensions "$undisabled"
 gsettings set org.gnome.shell disable-user-extensions false
 
 if [ "$failed" -gt 0 ]; then

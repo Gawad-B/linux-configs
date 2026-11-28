@@ -100,6 +100,10 @@ so apps can't write their caches into this repo.
 - `icons/install.sh` — **MacTahoe**, kept for its `MacTahoe-dark` cursors,
   fetched from [vinceliuice/MacTahoe-icon-theme](https://github.com/vinceliuice/MacTahoe-icon-theme)
   (not vendored: ~215 MB).
+- `icons/mactahoe-extras/` — fills MacTahoe's gaps so every launcher gets a
+  macOS-style icon: aliases to MacTahoe art where it is the app's real icon,
+  otherwise a MacTahoe-style tile generated from the app's own art (`apply.sh`;
+  `--install-watcher` rebuilds on app changes, `--revert` removes it all).
 - `grub-theme/` — **Elegant Mojave (window-left-dark)**, vendored, with an
   installer that wires it into `/etc/default/grub`.
 - `gnome/` — see [`gnome/EXTENSIONS.md`](gnome/EXTENSIONS.md) for the

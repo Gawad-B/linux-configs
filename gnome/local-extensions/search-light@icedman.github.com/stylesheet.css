@@ -75,3 +75,85 @@
   padding-left: 12px;
   padding-right: 12px;
 }
+
+/* Applications view (empty query) */
+#searchLightBox .sl-apps {
+  padding: 0 16px 12px 16px; /* keep left + right in sync with SIDE_PADDING in appsView.js */
+  spacing: 10px;
+}
+
+#searchLightBox .sl-apps-chips {
+  spacing: 6px;
+}
+
+#searchLightBox .sl-apps-chip {
+  padding: 4px 11px;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.10);
+  transition-duration: 100ms;
+}
+
+#searchLightBox .sl-apps-chip:hover {
+  background-color: rgba(255, 255, 255, 0.18);
+}
+
+#searchLightBox .sl-apps-chip:checked {
+  background-color: -st-accent-color;
+}
+
+#searchLightBox .sl-apps-chip-label {
+  font-size: 9pt !important;
+  font-weight: 500;
+}
+
+#searchLightBox .sl-apps-chip:checked .sl-apps-chip-label {
+  color: white !important;
+}
+
+#searchLightBox .sl-app-tile {
+  padding: 8px 4px 6px 4px;
+  border-radius: 12px;
+  transition-duration: 100ms;
+}
+
+#searchLightBox .sl-app-tile:hover {
+  background-color: rgba(255, 255, 255, 0.10);
+}
+
+#searchLightBox .sl-app-tile:focus,
+#searchLightBox .sl-app-tile:active {
+  background-color: rgba(255, 255, 255, 0.20);
+}
+
+#searchLightBox .sl-app-tile-box {
+  spacing: 6px;
+}
+
+#searchLightBox .sl-app-tile-label {
+  font-size: 9pt !important;
+}
+
+#searchLightBox .sl-apps-row {
+  spacing: 0;
+}
+
+#searchLightBox.light .sl-apps-chip {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+#searchLightBox.light .sl-apps-chip:hover {
+  background-color: rgba(0, 0, 0, 0.12);
+}
+
+#searchLightBox.light .sl-apps-chip:checked {
+  background-color: -st-accent-color;
+}
+
+#searchLightBox.light .sl-app-tile:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+#searchLightBox.light .sl-app-tile:focus,
+#searchLightBox.light .sl-app-tile:active {
+  background-color: rgba(0, 0, 0, 0.12);
+}

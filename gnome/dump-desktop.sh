@@ -7,6 +7,8 @@
 #   - the wallpaper path: bootstrap.sh sets it from wallpapers/ instead
 #   - night-light coordinates: a precise location, and this repo is public
 #   - enabled-extensions: owned by extensions.txt / install-extensions.sh
+#   - mutter dynamic-workspaces and wm num-workspaces: Mission Control sets
+#     them while it runs (fixed desktops) and restores them when disabled
 
 set -eu
 
@@ -27,6 +29,7 @@ shell/keybindings
 
 dump_dir() {
   dconf dump "/org/gnome/$1/" | awk -v p="$1" '
+    /^(dynamic-workspaces|num-workspaces)=/ { next }
     /^\[\/\]$/   { print "[" p "]"; next }
     /^\[.*\]$/   { sub(/^\[/, "[" p "/"); print; next }
                  { print }'

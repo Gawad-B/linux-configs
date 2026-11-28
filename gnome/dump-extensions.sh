@@ -8,6 +8,9 @@
 # Personal data is stripped before writing, because this repository is public:
 #   - Prayer Times latitude/longitude  -> replaced with a comment
 #   - Desk Widgets background video path -> blanked
+# Mission Control's internal state (saved-dynamic-workspaces,
+# temporary-desktops) is dropped: loaded on a new machine it would make the
+# first start think a session ended uncleanly.
 # Re-check the diff for anything else personal before you commit.
 
 set -eu
@@ -25,6 +28,7 @@ dconf dump /org/gnome/shell/extensions/ \
   | sed -E "s|^latitude=.*|# latitude stripped (public repo) -- set via Prayer Times prefs|" \
   | sed -E "s|^longitude=.*|# longitude stripped (public repo) -- set via Prayer Times prefs|" \
   | sed -E "s|^background-video-path=.*|# background-video-path stripped (public repo) -- set in the extension's prefs|" \
+  | sed -E "/^(saved-dynamic-workspaces|temporary-desktops)=/d" \
   > "$here/extension-settings.dconf"
 
 printf 'Wrote:\n'

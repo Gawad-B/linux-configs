@@ -19,6 +19,7 @@
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as DND from 'resource:///org/gnome/shell/ui/dnd.js';
+import Atk from 'gi://Atk';
 import Meta from 'gi://Meta';
 import Shell from 'gi://Shell';
 import Gio from 'gi://Gio';
@@ -27,7 +28,6 @@ import GObject from 'gi://GObject';
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 import Graphene from 'gi://Graphene';
-import { trySpawnCommandLine } from 'resource:///org/gnome/shell/misc/util.js';
 
 import { Timer } from './timer.js';
 import { Style } from './style.js';
@@ -38,11 +38,46 @@ import { BlurEffect } from './effects/blur_effect.js';
 
 import { schemaId, SettingsKeys } from './preferences/keys.js';
 import { KeyboardShortcuts } from './keybinding.js';
+import { AppsView } from './appsView.js';
 
 import {
   Extension,
   gettext as _,
 } from 'resource:///org/gnome/shell/extensions/extension.js';
+
+// Frosted background (blur-background): while the panel is shown, what lies
+// behind it (windows and wallpaper) is blurred live by a Shell.BlurEffect in
+// BACKGROUND mode on an actor under the panel's content, with a tint on top
+// dark (or, for the light variant, light) enough to keep the labels readable
+// over a bright, busy window.
+//
+// The blur reads the panel's whole box from the frame being drawn, but Mutter
+// redraws only the damaged part of the screen; outside that part the
+// framebuffer still holds last frame's already blurred, tinted panel, so a
+// partial redraw shows lighter patches with hard seams (hovering a tile,
+// typing, scrolling, a window behind the panel updating). Clutter queues a
+// redraw of every clone of an actor when anything inside it is damaged, and
+// redraws a clone whole, in the same frame. Two invisible clones (opacity 0,
+// never painted, not reactive) therefore put the panel's whole box into any
+// redraw that touches it: one of the panel itself, laid over the panel, and
+// one of the window group (windows and wallpaper), scaled down onto the
+// panel's box. Nothing runs while nothing changes.
+//
+// Known limits: Shell.BlurEffect has no rounded corners, so with a border
+// radius the frost stays square while the tint is rounded; something drawn
+// above the panel that is not in it (a notification banner sliding over it)
+// is not covered by the clones.
+const FROST_NAME = 'searchLightFrost';
+// Shell.BlurEffect took a radius instead of a sigma in GNOME 46; the radius
+// is twice the sigma (as GNOME's own lock screen and Blur my Shell convert).
+const SIGMA_TO_RADIUS = 2;
+// Largest background value (sRGB, 0..1) left behind light labels: white
+// labels stay at 4.5:1 or better even on a focused tile (+20 % white) over a
+// white window. Smallest one behind dark labels (light variant): black labels
+// stay at 4.5:1 on a pressed tile (12 % black) over a black window.
+const FROST_MAX_DARK_BG = 0.33;
+const FROST_MIN_LIGHT_BG = 0.53;
+const FROST_MAX_TINT_ALPHA = 0.9;
 
 var SearchLight = GObject.registerClass(
   {},
@@ -82,9 +117,16 @@ export default class SearchLightExt extends Extension {
           }
           break;
         case 'background-color':
-        case 'blur-background':
         case 'panel-icon-color':
-          this._updateBlurredBackground();
+          this._updateCss();
+          break;
+        case 'blur-background':
+          this._updateCss();
+          this._syncFrost();
+          break;
+        case 'blur-sigma':
+        case 'blur-brightness':
+          this._updateFrostEffect();
           this._updateCss();
           break;
         case 'use-animations':
@@ -123,17 +165,6 @@ export default class SearchLightExt extends Extension {
       // console.log(`${name} ${key.value}`);
     });
 
-    this._desktopSettings = new Gio.Settings({
-      schema_id: 'org.gnome.desktop.background',
-    });
-    this._desktopSettings.connectObject(
-      'changed::picture-uri',
-      () => {
-        this._updateBlurredBackground();
-      },
-      this,
-    );
-
     this.mainContainer = new SearchLight();
     this.mainContainer._delegate = this;
     this.container = new St.BoxLayout({
@@ -154,7 +185,37 @@ export default class SearchLightExt extends Extension {
 
     this.mainContainer.add_child(this.container);
 
-    this._setupBackground();
+    // Applications view shown under the entry while the query is empty.
+    // Added to the container by _acquire_ui(), after the entry and results.
+    this._appsView = new AppsView({
+      onLaunch: (app) => this._launchApp(app),
+      onFocusEntry: () => this._entry?.grab_key_focus(),
+      onType: (text) => this._typeIntoEntry(text),
+    });
+
+    // Down from the entry moves into the Applications view. This runs in the
+    // capture phase on the panel, ahead of the search controller's own
+    // capture handler on the entry, which (with the search still marked
+    // active after a cleared query) would steer Down into the hidden results.
+    this._appsKeyController = new Clutter.KeyController();
+    this._appsKeyController.connect('key-press', () => {
+      const [, symbol] = this._appsKeyController.get_key();
+      if (
+        symbol === Clutter.KEY_Down &&
+        this._entry &&
+        this._appsView?.visible &&
+        global.stage.get_key_focus() === this._entry.clutter_text &&
+        this._appsView.focusFirst()
+      ) {
+        return Clutter.EVENT_STOP;
+      }
+      return Clutter.EVENT_PROPAGATE;
+    });
+    this.container.add_action_full(
+      'search-light-apps-keys',
+      Clutter.EventPhase.CAPTURE,
+      this._appsKeyController,
+    );
 
     this.accel = new KeyboardShortcuts();
     this.accel.enable();
@@ -217,10 +278,17 @@ export default class SearchLightExt extends Extension {
     }, 1500);
     this._updateProviders();
     this._updateWindowEffect();
-    this._updateBlurredBackground();
   }
 
   disable() {
+    // Disabled while shown: give the overview its search entry back and drop
+    // the stage/display handlers, which would otherwise queue a hide after
+    // disable() has run.
+    if (this._entry) {
+      this._release_ui();
+      global.compositor.enable_unredirect();
+    }
+    this._remove_events();
     this._cancelDeferred();
     this._hiTimer?.shutdown();
     this._loTimer?.shutdown();
@@ -241,9 +309,6 @@ export default class SearchLightExt extends Extension {
     this._settingsKeys.disconnectSettings();
     this._settings = null;
 
-    this._desktopSettings.disconnectObject();
-    this._desktopSettings = null;
-
     if (this.accel) {
       this.accel.disable();
       delete this.accel;
@@ -258,12 +323,16 @@ export default class SearchLightExt extends Extension {
     this._removeProviders();
     this._providers = null;
 
-    if (this._background) {
-      if (this._background.get_parent()) {
-        this._background.get_parent().remove_child(this._background);
-      }
-      this._background = null;
+    if (this._appsKeyController) {
+      this.container.remove_action(this._appsKeyController);
+      this._appsKeyController = null;
     }
+    if (this._appsView) {
+      this._appsView.destroy();
+      this._appsView = null;
+    }
+
+    this._destroyFrost();
 
     Main.layoutManager.removeChrome(this.mainContainer);
     this.mainContainer = null;
@@ -324,22 +393,110 @@ export default class SearchLightExt extends Extension {
     return effect;
   }
 
-  _updateBlurredBackground() {
-    this.desktop_background = this._desktopSettings.get_string('picture-uri');
-    
-    let uuid = GLib.get_user_name();
-    this.desktop_background_blurred = `/tmp/searchlight-${uuid}-bg-blurred.jpg`;
-
-    if (this.blur_background) {
-      //   let color = this.background_color || [0, 0, 0, 0.5];
-      //   let bg = this._desktopSettings.get_string('picture-uri');
-      //   let a = Math.floor(100 - color[3] * 100);
-      //   let rgb = this._style.hex(color);
-      // 	 let cmd = `convert -scale 10% -blur 0x2.5 -resize 200% -fill "${rgb}" -tint ${a} "${bg}" ${this.desktop_background_blurred}`;
-      let cmd = `convert -scale 10% -blur 0x2.5 -resize 200% "${this.desktop_background}" ${this.desktop_background_blurred}`;
-      console.log(cmd);
-      trySpawnCommandLine(cmd);
+  // Shows the frosted background while the panel is shown and the
+  // blur-background setting is on, removes it otherwise.
+  _syncFrost() {
+    if (this.blur_background && this._visible && this._entry) {
+      this._createFrost();
+    } else {
+      this._destroyFrost();
     }
+  }
+
+  _createFrost() {
+    if (this._frost) return;
+
+    this._frostBlur = new Shell.BlurEffect({
+      mode: Shell.BlurMode.BACKGROUND,
+    });
+    this._frost = new St.Widget({
+      name: FROST_NAME,
+      x_expand: true,
+      y_expand: true,
+      reactive: false,
+      accessible_role: Atk.Role.REDUNDANT_OBJECT,
+    });
+    this._frost.add_effect_with_name('blur', this._frostBlur);
+    this._updateFrostEffect();
+    this._frost.style = this._frostStyle || '';
+    // Under the panel's content. The BACKGROUND blur reads the framebuffer
+    // it is drawn into: with the panel redirected offscreen that would be the
+    // panel's own (empty) buffer, so the panel is drawn straight to the
+    // screen while the frost is up.
+    this.mainContainer.offscreen_redirect = 0;
+    this.mainContainer.insert_child_at_index(this._frost, 0);
+
+    // The two damage clones (see the comment at the top of this file).
+    const uiGroup = this.mainContainer.get_parent();
+    this._frostClones = [this.mainContainer, global.window_group].map(
+      (source) => {
+        const clone = new Clutter.Clone({
+          source,
+          opacity: 0,
+          reactive: false,
+          // Exposed for technical reasons only: screen readers skip it.
+          accessible_role: Atk.Role.REDUNDANT_OBJECT,
+        });
+        clone.add_constraint(
+          new Clutter.BindConstraint({
+            source: this.mainContainer,
+            coordinate: Clutter.BindCoordinate.ALL,
+          }),
+        );
+        uiGroup.insert_child_below(clone, this.mainContainer);
+        return clone;
+      },
+    );
+  }
+
+  _destroyFrost() {
+    for (const clone of this._frostClones || []) {
+      clone.destroy();
+    }
+    this._frostClones = null;
+    if (this._frost) {
+      this._frost.destroy();
+      this._frost = null;
+    }
+    this._frostBlur = null;
+    if (this.mainContainer) {
+      this.mainContainer.offscreen_redirect = Clutter.OffscreenRedirect.ALWAYS;
+    }
+  }
+
+  _updateFrostEffect() {
+    if (!this._frostBlur) return;
+    const sigma = Math.max(0, this.blur_sigma ?? 30);
+    this._frostBlur.radius = Math.round(sigma * SIGMA_TO_RADIUS);
+    this._frostBlur.brightness = this._frostBrightness();
+  }
+
+  _frostBrightness() {
+    return Math.min(1, Math.max(0, this.blur_brightness ?? 0.6));
+  }
+
+  // The tint over the blur: the panel's background colour, at least as
+  // opaque as needed to keep the labels readable whatever lies behind (the
+  // worst case: a white window behind light labels, a black one behind dark
+  // labels).
+  _frostTint(bg, light) {
+    let [r, g, b, a] = bg;
+    let need = 0;
+    if (light) {
+      const c = Math.min(r, g, b);
+      need = c > 0 ? FROST_MIN_LIGHT_BG / c : FROST_MAX_TINT_ALPHA;
+    } else {
+      const c = Math.max(r, g, b);
+      const brightest = this._frostBrightness();
+      if (brightest > FROST_MAX_DARK_BG) {
+        need =
+          c < FROST_MAX_DARK_BG
+            ? (brightest - FROST_MAX_DARK_BG) / (brightest - c)
+            : FROST_MAX_TINT_ALPHA;
+      }
+    }
+    a = Math.min(FROST_MAX_TINT_ALPHA, Math.max(a, need));
+    return [r, g, b, a];
   }
 
   _updateWindowEffect() {
@@ -388,55 +545,6 @@ export default class SearchLightExt extends Extension {
     this._providers = null;
   }
 
-  _setupBackground() {
-    if (this._background && this._background.get_parent()) {
-      this._background.get_parent().remove_child(this._background);
-    }
-
-    // blurred background image
-    // this._bgActor = new Meta.BackgroundActor();
-    // let bgSource = Main.layoutManager._backgroundGroup.get_child_at_index(0);
-    // this._bgActor.set_content(bgSource.get_content());
-    // this._blurEffect = new Shell.BlurEffect({
-    //   name: 'blur',
-    //   brightness: this.blur_brightness,
-    //   sigma: this.blur_sigma,
-    //   mode: Shell.BlurMode.ACTOR,
-    // });
-
-    if (!this._blurEffect) {
-      this._blurEffect = this._createEffect(1);
-    }
-
-    let background = new St.Widget({
-      name: 'searchLightBlurredBackground',
-      layout_manager: new Clutter.BinLayout(),
-      x: 0,
-      y: 0,
-      width: 20,
-      height: 20,
-    });
-
-    // let image = new St.Widget({
-    //   name: 'searchLightBlurredBackgroundImage',
-    //   x: 0,
-    //   y: 0,
-    //   width: 20,
-    //   height: 20,
-    //   effect: this._blurEffect,
-    // });
-
-    // image.add_child(this._bgActor);
-    // background.add_child(image);
-    // this._bgActor.clip_to_allocation = true;
-    // this._bgActor.offscreen_redirect = Clutter.OffscreenRedirect.ALWAYS;
-
-    this.mainContainer.insert_child_below(background, this.container);
-    this._background = background;
-    this._background.opacity = 0;
-    this._background.visible = false;
-  }
-
   show() {
     if (Main.overview.visible) return;
 
@@ -446,13 +554,11 @@ export default class SearchLightExt extends Extension {
     }
     this._acquire_ui();
 
-    if (this._bgActor) {
-      let bgSource = Main.layoutManager._backgroundGroup.get_child_at_index(0);
-      this._bgActor.set_content(bgSource.get_content());
-    }
-
     this._updateCss();
     this._layout();
+    this._appsView.prepare(this.width);
+    this._syncAppsView();
+    this._syncFrost();
 
     global.compositor.disable_unredirect();
 
@@ -509,12 +615,14 @@ export default class SearchLightExt extends Extension {
           this._visible = false;
           this.mainContainer.hide();
           global.compositor.enable_unredirect();
+          this._syncFrost();
         },
       });
     } else {
       this.mainContainer.opacity = 0;
       this._visible = false;
       this.mainContainer.hide();
+      this._syncFrost();
       global.compositor.enable_unredirect();
     }
     // this._hidePopups();
@@ -583,26 +691,12 @@ export default class SearchLightExt extends Extension {
     let y = this.monitor.y + this.sh / 2 - this.height / 2;
     this._visible = true;
 
-    this.container.set_size(this.width, this.initial_height);
-    this.mainContainer.set_size(this.width, this.initial_height);
+    // The Applications view fills the panel from the start, so the panel no
+    // longer opens at entry height and grows on the first keystroke.
+    let height = this._appsView ? this.height : this.initial_height;
+    this.container.set_size(this.width, height);
+    this.mainContainer.set_size(this.width, height);
     this.mainContainer.set_position(x, y);
-
-    // background
-    if (this._background) {
-      if (this._bgActor) {
-        this._bgActor.set_position(this.monitor.x - x, this.monitor.y - y);
-        this._bgActor.set_size(this.monitor.width, this.monitor.height);
-        this._bgActor
-          .get_parent()
-          .set_size(this.monitor.width, this.monitor.height);
-      }
-      let padding = 0; //this.border_thickness || 0;
-      this._background.set_position(padding, padding);
-      this._background.set_size(
-        this.monitor.width - padding * 2,
-        this.monitor.height - padding * 2,
-      );
-    }
   }
 
   _updateShortcut(disable) {
@@ -715,6 +809,8 @@ export default class SearchLightExt extends Extension {
         this._searchResults.activateDefault;
     }
     this._searchResults.activateDefault = () => {
+      // Enter on an empty query: nothing to activate, keep the panel visible
+      if (this._appsView?.visible) return;
       // hide window immediately when activated
       this.mainContainer.opacity = 0;
       this._searchResults._activateDefault();
@@ -728,10 +824,36 @@ export default class SearchLightExt extends Extension {
       this._search.get_parent().remove_child(this._search);
     }
     this.container.add_child(this._search);
+    if (this._appsView.get_parent()) {
+      this._appsView.get_parent().remove_child(this._appsView);
+    }
+    this.container.add_child(this._appsView);
     if (!this._search.__searchCancelled) {
       this._search.__searchCancelled = this._search._searchCancelled;
       this._search._searchCancelled = () => {};
     }
+    // The search controller resets the (empty) search when a click lands
+    // outside the entry, which drops key focus and closes Search Light; let
+    // clicks on the Applications view (chips, tiles) through.
+    if (!this._search.__maybeCancelSearch) {
+      this._search.__maybeCancelSearch = this._search._maybeCancelSearch;
+      const search = this._search;
+      const appsView = this._appsView;
+      this._search._maybeCancelSearch = function () {
+        try {
+          const event = this._clickGesture.get_point_event(0);
+          const target = global.stage.get_event_actor(event);
+          if (target && appsView.contains(target)) return false;
+        } catch (err) {
+          console.log(err);
+        }
+        return search.__maybeCancelSearch.call(this);
+      };
+    }
+    this._savedHintText = this._entry.hint_text;
+    let primaryIcon = this._entry.get_primary_icon();
+    this._savedPrimaryIconName =
+      primaryIcon instanceof St.Icon ? primaryIcon.icon_name : null;
     this._search._text.get_parent().grab_key_focus();
     this._textChangedEventId = this._search._text.connect(
       'text-changed',
@@ -743,7 +865,7 @@ export default class SearchLightExt extends Extension {
           this._corners[3].y = this.height - this._corners[1].height;
           this._edges[3].y = this.height - 2;
         }
-        this._search.show();
+        this._syncAppsView();
       },
     );
 
@@ -751,6 +873,15 @@ export default class SearchLightExt extends Extension {
   }
 
   _release_ui() {
+    if (this._appsView && this._appsView.get_parent()) {
+      this._appsView.get_parent().remove_child(this._appsView);
+    }
+    if (this._search) {
+      this._searchResults.visible = true;
+      this._search.y_expand = true;
+    }
+    this._restoreEntryLook();
+
     if (this._entry) {
       if (this._entry.get_parent()) {
         this._entry.get_parent().remove_child(this._entry);
@@ -769,6 +900,10 @@ export default class SearchLightExt extends Extension {
       if (this._textChangedEventId) {
         this._search._text.disconnect(this._textChangedEventId);
         this._textChangedEventId = null;
+      }
+      if (this._search.__maybeCancelSearch) {
+        this._search._maybeCancelSearch = this._search.__maybeCancelSearch;
+        this._search.__maybeCancelSearch = null;
       }
       if (this._search.__searchCancelled) {
         this._search._searchCancelled = this._search.__searchCancelled;
@@ -793,6 +928,58 @@ export default class SearchLightExt extends Extension {
     }
   }
 
+  // Shows the Applications view while the query is empty, the normal search
+  // results otherwise. The entry shows "Applications" and an apps icon while
+  // the view is up.
+  _syncAppsView() {
+    if (!this._entry || !this._search || !this._appsView) return;
+    let empty = this._search._text.text === '';
+    this._appsView.visible = empty;
+    // Hide the results, not the search controller: unmapping the controller
+    // resets the search, which drops key focus and closes Search Light.
+    this._search.show();
+    this._searchResults.visible = !empty;
+    this._search.y_expand = !empty;
+    if (empty) {
+      this._entry.hint_text = _('Applications');
+      this._setEntryIconName('view-app-grid-symbolic');
+    } else {
+      this._restoreEntryLook();
+    }
+  }
+
+  _setEntryIconName(name) {
+    let icon = this._entry?.get_primary_icon();
+    if (name && icon instanceof St.Icon) icon.icon_name = name;
+  }
+
+  _restoreEntryLook() {
+    if (!this._entry) return;
+    if (this._savedHintText !== undefined) {
+      this._entry.hint_text = this._savedHintText;
+    }
+    this._setEntryIconName(this._savedPrimaryIconName);
+  }
+
+  _launchApp(app) {
+    // Clicks arrive from a gesture; reparenting the entry (hide) while it is
+    // dispatching aborts GNOME 50+, so launch from idle like show/hide.
+    this._defer('launch', () => {
+      if (this._entry) {
+        this.mainContainer.opacity = 0;
+        this.hide();
+      }
+      app.activate();
+    });
+  }
+
+  _typeIntoEntry(text) {
+    if (!this._entry) return;
+    this._entry.grab_key_focus();
+    let clutterText = this._entry.clutter_text;
+    clutterText.insert_text(text, clutterText.get_cursor_position());
+  }
+
   _updateCss(disable) {
     let bg = this.background_color || [0, 0, 0, 0.5];
     if (this.text_color && this.text_color[3] > 0) {
@@ -805,58 +992,42 @@ export default class SearchLightExt extends Extension {
       }
     }
 
-    this._background.remove_effect_by_name('blur');
-    if (this._blurEffect && this.blur_background) {
-      this._background.add_effect_with_name('blur', this._blurEffect);
-      this._blurEffect.color = bg;
-    }
-
-    this._background.visible = true;
-    this._background.opacity = 200;
+    // Over the frost the tint goes on the frost; without it the panel draws
+    // the background colour itself, as before.
+    let frosted = !!this.blur_background;
+    let tint = frosted
+      ? this._frostTint(bg, this.container.has_style_class_name('light'))
+      : bg;
 
     let styles = [];
     {
       let ss = [];
 
-      if (!this.blur_background) {
+      if (!frosted) {
         let clr = this._style.rgba(this.background_color);
         ss.push(`\n  background: rgba(${clr});`);
       }
 
-      if (
-        this.border_thickness
-        // && !this.blur_background
-      ) {
+      if (this.border_thickness) {
         let clr = this._style.rgba(this.border_color);
         ss.push(`\n  border: ${this.border_thickness}px solid rgba(${clr});`);
       }
 
       styles.push(`#searchLight {${ss.join(' ')}}`);
-      styles.push(`#searchLightBlurredBackground {${ss.join(' ')}}`);
     }
 
-    // ss.push(`\n background-image: url("${bg}");`);
-    if (
-      this.blur_background &&
-      this.desktop_background_blurred &&
-      this.monitor
-    ) {
-      let sw = this.monitor.width;
-      let sh = this.monitor.height;
-      let ss = [];
-      // ss.push(`\n background-image: url("${BLURRED_BG_PATH}");`);
-      ss.push(
-        `\n background-image: url("${this.desktop_background_blurred}");`,
-      );
-      ss.push(`\n background-size: ${sw}px ${sh}px;`);
-      ss.push(`\n background-position: top center;`);
-      // ss.push(`\n border: 2px solid red;`);
-      this._background.style = ss.join(' ');
-
-      // styles.push(`#searchLightBlurredBackground {${ss.join(' ')}}`);
-      // styles.push(`#searchLight {${ss.join(' ')}}`);
-    } else {
-      this._background.style = '';
+    {
+      let r = 0;
+      if (this.border_radius !== null) {
+        let rads = [0, 16, 18, 20, 22, 24, 28, 32];
+        r = rads[Math.floor(this.border_radius)] || 0;
+      }
+      // Not Style.rgba(): it rounds the alpha to one decimal.
+      let [tr, tg, tb] = tint.map((v) => Math.round(255 * v));
+      this._frostStyle = frosted
+        ? `background-color: rgba(${tr},${tg},${tb},${tint[3].toFixed(3)}); border-radius: ${r}px;`
+        : '';
+      if (this._frost) this._frost.style = this._frostStyle;
     }
 
     {
@@ -865,8 +1036,6 @@ export default class SearchLightExt extends Extension {
         let r = rads[Math.floor(this.border_radius)];
         if (r) {
           let st = `StBoxLayout.search-section-content { border-radius: ${r}px !important; }`;
-          st = '#searchLightBlurredBackgroundImage,\n' + st; // has no effect
-          st = '#searchLightBlurredBackground,\n' + st; // has no effect
           st = '#searchLightBox,\n' + st;
           st = '#searchLight,\n' + st;
           styles.push(st);
@@ -1034,7 +1203,10 @@ export default class SearchLightExt extends Extension {
     if (!this._entry) return;
     let focus = global.stage.get_key_focus();
     let appearFocused =
-      focus && (this._entry.contains(focus) || this._searchResults.contains(focus));
+      focus &&
+      (this._entry.contains(focus) ||
+        this._searchResults.contains(focus) ||
+        this._appsView?.contains(focus));
 
     if (!appearFocused) {
       // popups are not handled well.. hide immediately
