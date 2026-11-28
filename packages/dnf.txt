@@ -55,8 +55,8 @@ frei0r-plugins
 gcc
 gcc-c++
 make
-nodejs
-npm
+nodejs22-bin
+nodejs22-npm-bin
 gjs
 glib2-devel
 gtk4-devel

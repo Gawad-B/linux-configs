@@ -21,7 +21,7 @@ set -uo pipefail
 
 repo_url='https://github.com/Gawad-B/linux-configs.git'
 default_dir="$HOME/Coding/linux-configs"
-wallpaper='kingdom-hearts-sora-kairi.jpg'
+wallpaper='6.jpg'
 # Not $USER: it is unset under sudo -i, cron, containers and some SSH setups.
 user=$(id -un)
 all_steps=(repos packages flatpaks dotfiles tools shell themes grub gnome services neovim)
